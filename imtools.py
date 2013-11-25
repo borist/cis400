@@ -3,6 +3,11 @@ from PIL import Image
 import numpy as np
 
 
+# ---------------------------------------
+# A utility class to help analyze images
+# ---------------------------------------
+
+
 def get_imlist(path):
     """
     Return a list of filenames for all jpg images in a directory
