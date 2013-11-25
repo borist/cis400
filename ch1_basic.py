@@ -1,4 +1,4 @@
-PATH_TO_IMAGES = 'data/'
+PATH_TO_IMAGES = 'images/'
 
 # playing around with the info in CV with python
 
