@@ -8,7 +8,7 @@ Running:
 --------
 - If you are checking out the code for the first time, you'll have to install a `virtualenv` in the home directory of the project.
     - If you don't have `virtualenv` installed you'll first have to run `pip install virtualenv` to install it.
-        - for more information on installing `pip`, please see: [http://www.pip-installer.org/en/latest/installing.html] (http://www.pip-installer.org/en/latest/installing.html)
+        - for more information on installing `pip`, please see: [http://www.pip-installer.org/en/latest/installing.html](http://www.pip-installer.org/en/latest/installing.html)
     - Then at the base directory of the project run `virtualenv --no-site-packages venv` to install the necessary files.
 
 - Entering the virtual enviornment: 
