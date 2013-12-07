@@ -2,6 +2,7 @@
 # https://opencv-python-tutroals.readthedocs.org/en/latest/py_tutorials/py_calib3d/py_calibration/py_calibration.html#calibration
 
 import numpy as np
+import time
 import cv2
 import glob
 import sys
@@ -46,20 +47,25 @@ for fname in images:
 
         try:
             cv2.imshow('img', img)
+            time.sleep(0.5)
+            cv2.destroyWindow('img')
         except Exception, e:
             exc_type, exc_value, exc_traceback = sys.exc_info()
             traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
             print "error: ", e
 
-        cv2.waitKey()
 
-cv2.destroyAllWindows()
-
-# calibration
+# ------------------------------------
+# Calibrate camera based on test images
+# -------------------------------------
 print "calibrating..."
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 
+
 #undistortion
+# ----------------------------
+# Undistort the image
+# ----------------------------
 print "undistorting..."
 img = cv2.imread(PATH_TO_IMAGES + 'left12.jpg')
 h, w = img.shape[:2]
@@ -88,8 +94,22 @@ cv2.imshow('img', img)
 # show undistortion method 1 result
 calibimg = cv2.imread(PATH_TO_CALIB + 'calibresult.png')
 cv2.imshow('calibrated', calibimg)
+cv2.moveWindow('calibrated', 500, 100)
 
 # show undistortion method 2 result
 calibimg2 = cv2.imread(PATH_TO_CALIB + 'calibresult2.png')
 cv2.imshow('calibrated2', calibimg2)
+cv2.moveWindow('calibrated2', 1100, 100)
 cv2.waitKey()
+
+# ----------------------------
+# Calculate reprojection error
+# ----------------------------
+mean_error = 0.0
+tot_error = 0.0
+for i in xrange(len(objpoints)):
+    imgpoints2, _ = cv2.projectPoints(objpoints[i], rvecs[i], tvecs[i], mtx, dist)
+    error = float(cv2.norm(imgpoints[i], imgpoints2, cv2.NORM_L2)) / float(len(imgpoints2))
+    tot_error += error
+
+print "total error: ", float(mean_error) / float(len(objpoints))
