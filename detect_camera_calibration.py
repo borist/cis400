@@ -4,6 +4,8 @@
 import numpy as np
 import cv2
 import glob
+import sys
+import traceback
 
 PATH_TO_IMAGES = 'images/'
 
@@ -25,7 +27,7 @@ for fname in images:
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
     # Find the chess board corners
-    ret, corners = cv2.findChessboardCorners(gray, (7, 6), None)
+    ret, corners = cv2.findChessboardCorners(gray, (7, 6))
 
     # If found, add object points, image points (after refining them)
     if ret is True:
@@ -35,12 +37,18 @@ for fname in images:
         imgpoints.append(corners2)
 
         # Draw and display the corners
-        img = cv2.drawChessboardCorners(img, (7,6), corners2, ret)
-        try:
-            cv2.imshow('img',img)
-        except Exception, e:
-            print "errorrrr: ", e
+        if corners2 is not None:
+            cv2.drawChessboardCorners(img, (7,6), corners2, ret)
+        else:
+            cv2.drawChessboardCorners(img, (7,6), corners, ret)
 
-        cv2.waitKey(500)
+        try:
+            cv2.imshow('img', img)
+        except Exception, e:
+            exc_type, exc_value, exc_traceback = sys.exc_info()
+            traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
+            print "error: ", e
+
+        cv2.waitKey()
 
 cv2.destroyAllWindows()
