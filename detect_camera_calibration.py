@@ -8,6 +8,7 @@ import sys
 import traceback
 
 PATH_TO_IMAGES = 'images/'
+PATH_TO_CALIB = PATH_TO_IMAGES + 'calib/'
 
 # termiantion criteria
 criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 20, 0.001)
@@ -34,12 +35,13 @@ for fname in images:
         objpoints.append(objp)
 
         corners2 = cv2.cornerSubPix(gray, corners, (11,11), (-1,-1), criteria)
-        imgpoints.append(corners2)
 
         # Draw and display the corners
         if corners2 is not None:
+            imgpoints.append(corners2)
             cv2.drawChessboardCorners(img, (7,6), corners2, ret)
         else:
+            imgpoints.append(corners)
             cv2.drawChessboardCorners(img, (7,6), corners, ret)
 
         try:
@@ -54,17 +56,40 @@ for fname in images:
 cv2.destroyAllWindows()
 
 # calibration
+print "calibrating..."
 ret, mtx, dist, rvecs, tvecs = cv2.calibrateCamera(objpoints, imgpoints, gray.shape[::-1],None,None)
 
 #undistortion
-img = cv2.imread('left12.jpg')
-h,  w = img.shape[:2]
+print "undistorting..."
+img = cv2.imread(PATH_TO_IMAGES + 'left12.jpg')
+h, w = img.shape[:2]
 newcameramtx, roi=cv2.getOptimalNewCameraMatrix(mtx,dist,(w,h),1,(w,h))
 
-# undistort
+# undistorting method 1
 dst = cv2.undistort(img, mtx, dist, None, newcameramtx)
 
 # crop the image
 x,y,w,h = roi
 dst = dst[y:y+h, x:x+w]
-cv2.imwrite('calibresult.png',dst)
+cv2.imwrite(PATH_TO_CALIB + 'calibresult.png',dst)
+
+# undistorting method 2
+mapx, mapy = cv2.initUndistortRectifyMap(mtx, dist, None, newcameramtx, (w,h), 5)
+dst = cv2.remap(img,mapx,mapy,cv2.INTER_LINEAR)
+
+# crop the image
+x,y,w,h = roi
+dst = dst[y:y+h, x:x+w]
+cv2.imwrite(PATH_TO_CALIB + 'calibresult2.png', dst)
+
+# show original
+cv2.imshow('img', img)
+
+# show undistortion method 1 result
+calibimg = cv2.imread(PATH_TO_CALIB + 'calibresult.png')
+cv2.imshow('calibrated', calibimg)
+
+# show undistortion method 2 result
+calibimg2 = cv2.imread(PATH_TO_CALIB + 'calibresult2.png')
+cv2.imshow('calibrated2', calibimg2)
+cv2.waitKey()
