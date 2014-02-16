@@ -51,7 +51,18 @@ def compute_pp():
     o = compute_intersect(v0, h0, v1, h1)
     print o
     # cv2.circle(img, (int(o[0]), int(o[1])), 100, (255, 0, 0), -1)
+    compute_focal_length(v0, o, h0)
     return (v0, o, h0)
+
+# Takes in a vanishing point, the image center, and the endpoint corresponding to the vanishing point.
+def compute_focal_length(v, o, h):
+    r = np.linalg.norm(v - h) / 2    # radius
+    c = np.linalg.norm(v - o) / 2
+    f = (2 * r * c  - c ** 2) ** .5
+    print f
+    return f
+
+# Computes the distance between two points, specified in the form of arrays.
 
 # Computes a line segment perpendicular to the specified line segment.
 def perp(a):
