@@ -25,7 +25,7 @@ rotated_im = pil_im.rotate(180)
 # 1.2 Matplotlib
 # --------------
 
-import pylab as pl
+from matplotlib import pylab as pl
 
 # Read image to array
 im = pl.array(Image.open(PATH_TO_IMAGES + 'empire.jpg'))

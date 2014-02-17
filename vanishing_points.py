@@ -1,8 +1,8 @@
 #!/usr/bin/python
 
 from __future__ import division
-import cv2
 import numpy as np
+import cv2
 import sys
 
 points = []
@@ -12,8 +12,9 @@ def get_point(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print (x, y)
         points.append([x, y])
-        if len(points) == 12:
+        if len(points) == 18:
             compute_pp()
+            compute_centroid_pp()
 
 # Computes the principal point, or image center by finding the vanishing
 # points implied in the list points and computing their orthocenter.
@@ -42,7 +43,7 @@ def compute_pp():
     v2 = p1 - p0
 
     # h0 is the other endpoint of the height from p0.
-    # (projection of v1 onto v2) * (unit vector of v1) + startiig point of v1
+    # (projection of v1 onto v2) * (unit vector of v1) + starting point of v1
     mag_v0 = np.linalg.norm(v0)
     h0 = (np.dot(v0, v2) / mag_v0) * (v0 / mag_v0) + p1
     mag_v1 = np.linalg.norm(v1)
@@ -53,12 +54,40 @@ def compute_pp():
     # cv2.circle(img, (int(o[0]), int(o[1])), 100, (255, 0, 0), -1)
     return (v0, o, h0)
 
+def compute_centroid_pp():
+    vps = []
+    
+    for i in range(2):
+        current = []
+        for j in range(2):
+            a1 = np.array(points[6*i + (j % 3) + 1])
+            a2 = np.array(points[6*i + (j % 3) + 2])
+            b1 = np.array(points[6*i + (j % 3) + 3])
+            b2 = np.array(points[6*i + (j % 3) + 4])
+            current.append(compute_intersect(a1, a2, b1, b2))
+        centr = centroid(current)
+        vps.append(centr)
+
+    res = centroid(vps)
+    print res
+    return res
+
 # Computes a line segment perpendicular to the specified line segment.
 def perp(a):
     b = np.empty_like(a)
     b[0] = -a[1]
     b[1] = a[0]
     return b
+
+def centroid(xy):
+    totalX = 0
+    totalY = 0
+    k = 0
+    for [x,y] in xy:
+        totalX += x
+        totalY += y
+        k += 1
+    return [totalX/k,totalY/k]
 
 # Computes the intersection of two line segments. Line segment a is given by
 # endpoints a1, a2. Line segment b is given by endpoints b1, b2.
