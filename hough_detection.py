@@ -44,7 +44,7 @@ def hough_detection(filename):
 
     plt.show()
 
-    return ((negslop,vertical,posslop))
+    return (negslop,vertical,posslop)
 if __name__ == "__main__":
     print "Usage:", sys.argv[0], "image"
     print sys.argv
