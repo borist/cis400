@@ -14,7 +14,19 @@ def hough_detection(filename):
     lines = cv2.HoughLines(edges, 1, np.pi/180, 100)
     output = cv2.imread(filename, 0)
 
+    negslop = []
+    posslop = []
+    vertical = []
     for rho, theta in lines[0]:
+        direction = theta * 180/np.pi
+
+        if (direction > 0 and direction < 90):
+            posslop.append((rho,theta))
+        elif (direction > 90):
+            negslop.append((rho,theta))
+        elif (direction == 0):
+            vertical.append((rho,theta))
+
         a = np.cos(theta)
         b = np.sin(theta)
         x0 = a * rho
@@ -31,13 +43,10 @@ def hough_detection(filename):
     plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 
     plt.show()
-    #plt.subplot(121), plt.imshow(img, cmap = 'gray')
-    #plt.title('Original Image'), plt.xticks([]), plt.yticks([])
-    #plt.subplot(122), plt.imshow(edges,cmap = 'gray')
-    #plt.title('Edge Image'), plt.xticks([]), plt.yticks([])
 
+    return ((negslop,vertical,posslop))
 if __name__ == "__main__":
     print "Usage:", sys.argv[0], "image"
     print sys.argv
     image_path = sys.argv[1]
-    hough_detection(image_path)
+    print hough_detection(image_path)
