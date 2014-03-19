@@ -1,1 +1,7 @@
 Still mostly testing things, trying different UXs and familiarizing myself with the dynamics of chrome extensions. - Boris
+
+Current UX thoughts:
+    - will have a chrome extension with a popup window
+    - possible feature: the extension will first try to guess which picture you would like distorted and display it. if it is incorrect, then continue to next stop
+    - Selecting a photo: likely a drag and drop from the current page (not 100% sure that we can do this with a popup window like this, but I will continue to look into it)
+    - Scoring and correcting the image: given that all the code is in python, this will likely be done server side. So we'll send the image to a django server and do the calculations there
