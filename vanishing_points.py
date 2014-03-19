@@ -52,25 +52,54 @@ def compute_pp():
     o = compute_intersect(v0, h0, v1, h1)
     print o
     # cv2.circle(img, (int(o[0]), int(o[1])), 100, (255, 0, 0), -1)
+    compute_focal_length(v0, o, h0)
     return (v0, o, h0)
 
+# Takes in a vanishing point, the image center, and the endpoint corresponding to the vanishing point.
+def compute_focal_length(v, o, h):
+    r = np.linalg.norm(v - h) / 2    # radius
+    c = np.linalg.norm(v - o) / 2
+    f = (2 * r * c  - c ** 2) ** .5
+    print "this is the focal length!!!"
+    print f
+    return f
+
+# Computes the distance between two points, specified in the form of arrays.
 def compute_centroid_pp():
     vps = []
-    
-    for i in range(2):
+    for i in xrange(0, 3, 1):
         current = []
-        for j in range(2):
-            a1 = np.array(points[6*i + (j % 3) + 1])
-            a2 = np.array(points[6*i + (j % 3) + 2])
-            b1 = np.array(points[6*i + (j % 3) + 3])
-            b2 = np.array(points[6*i + (j % 3) + 4])
+        for j in xrange(0, 4, 2):
+            a1 = np.array(points[(6*i + j + 1) % (6*(i+1))])
+            a2 = np.array(points[(6*i + j + 2) % (6*(i+1))])
+            b1 = np.array(points[(6*i + j + 3) % (6*(i+1))])
+            b2 = np.array(points[(6*i + j + 4) % (6*(i+1))])
             current.append(compute_intersect(a1, a2, b1, b2))
         centr = centroid(current)
         vps.append(centr)
 
-    res = centroid(vps)
-    print res
-    return res
+    # orthocenter computation
+    p0 = vps[0]
+    p1 = vps[1]
+    p2 = vps[2]
+
+    # vectors representing 3 sides of triangle
+    v0 = p2 - p1
+    v1 = p2 - p0
+    v2 = p1 - p0
+
+    # h0 is the other endpoint of the height from p0.
+    # (projection of v1 onto v2) * (unit vector of v1) + starting point of v1
+    mag_v0 = np.linalg.norm(v0)
+    h0 = (np.dot(v0, v2) / mag_v0) * (v0 / mag_v0) + p1
+    mag_v1 = np.linalg.norm(v1)
+    h1 = (np.dot(v1, v2) / mag_v1) * (v1 / mag_v1) + p0
+
+    o = compute_intersect(v0, h0, v1, h1)
+    print o
+    # cv2.circle(img, (int(o[0]), int(o[1])), 100, (255, 0, 0), -1)
+    compute_focal_length(v0, o, h0)
+    return (v0, o, h0)
 
 # Computes a line segment perpendicular to the specified line segment.
 def perp(a):
@@ -87,7 +116,7 @@ def centroid(xy):
         totalX += x
         totalY += y
         k += 1
-    return [totalX/k,totalY/k]
+    return np.array([totalX/k,totalY/k])
 
 # Computes the intersection of two line segments. Line segment a is given by
 # endpoints a1, a2. Line segment b is given by endpoints b1, b2.
