@@ -1,0 +1,28 @@
+{
+    "manifest_version": 2,
+
+    "name": "Correcting Distored Images",
+    "description": "A tool to score and correct distorted images.",
+    "version": "1.0",
+
+    "browser_action": {
+        "default_title": "Select Distorted Image",
+        "default_icon": "icon.png",
+        "default_popup": "popup.html"
+    },
+
+    "content_scripts": [
+    {
+        //change 'matches' attribute to load content
+        // script only in pages you want to.
+        "matches": ["http://*/*", "http://*/*"],
+        "css": ["basic.css"],
+        "js": ["jquery.min.js", "contentscript.js"]
+    }
+    ],
+
+    // "permissions" : [
+    //         "tabs",
+    //         "http://*/*"
+    // ]
+}
