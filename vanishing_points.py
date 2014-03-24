@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import division
+from scipy import optimize as opt
 import numpy as np
 import cv2
 import sys
@@ -13,7 +14,8 @@ def get_point(event, x, y, flags, param):
         print (x, y)
         points.append([x, y])
         if len(points) == 18:
-            compute_centroid_pp()
+            optimize()
+            # compute_centroid_pp()
 
 # Computes the principal point, or image center by finding the vanishing
 # points implied in the list points and computing their orthocenter.
@@ -136,6 +138,34 @@ def compute_intersect(a1, a2, b1, b2):
     denom = np.dot(a_perp, b)
     num = np.dot(a_perp, a1 - b1)
     return (num / denom) * b + b1
+
+# TODO:
+# 1) is one edge enough? how do we best organize a1-a3 as global parameters?
+# 2) are three terms enough?
+# 3) which solution do we want? how many points gives us 1 solution? smarter guess?
+
+def objective_function(x):
+    obj = 0
+    a1 = x[0]
+    a2 = x[1]
+    a3 = x[2]
+    a = x[3]
+    b = x[4]
+    c = x[5]
+    for i in range(0, len(points)):
+        xd = points[i][0]
+        yd = points[i][1]
+        r = (xd^2) + (yd^2)
+        denom = 1 + a1 * (r^2) + a2 * (r^4) + a3 * (r^6)
+        xu = xd/denom
+        yu = yd/denom
+        obj += a*xu + b*yu + c
+    return obj
+
+def optimize():
+    x0 = np.array([1,1,1,1,1,1])
+    b = [[-1000,1000]] * 6
+    print opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b)
 
 cv2.namedWindow('image')
 cv2.setMouseCallback('image', get_point)
