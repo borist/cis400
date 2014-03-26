@@ -23,7 +23,7 @@ function get_images() {
         // we found a possible correct image
         return maxImgSrc;
     }
-    return "found no images...";
+    return "found no images";
 }
 
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {

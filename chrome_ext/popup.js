@@ -17,22 +17,24 @@ function display_text(text) {
 
 }
 
-// // send message to content script:
-// function send_message() {
-//     // currently just for testing purposes
+function process_response(response) {
+    //display_text(response);
 
-// }
+    // check if response is image and display it if it is
+    if (response == "found no images") {
+        display_text("unable to detect an image in the current tab");
+    } else {
+        display_image(response);
+    }
+
+}
 
 // document.addEventListener('DOMContentLoaded', function() {
 //     console.log("me");
 //     display_image(undefined);
 // });
 
+// send message to contentscript.js
 chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
-        chrome.tabs.sendMessage(tabs[0].id, {text: "report_back"}, function(response) {
-            console.log(tabs[0].id);
-            console.log(tabs[0].url);
-            console.log("got this: " + response);
-            display_text(response);
-        });
+        chrome.tabs.sendMessage(tabs[0].id, {text: "report_back"}, process_response);
     });
