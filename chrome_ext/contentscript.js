@@ -5,8 +5,13 @@ function get_images() {
     // naive first try, pull largest image
     var maxWidth = 0;
     var maxImgSrc = "";
-    $('body img').each(function(index, image) {
-        return "found something";
+
+    if ($("body").length > 0) {
+        console.log("found body");
+    }
+
+    $("img").each(function(index, image) {
+        console.log("found images...");
         var w = $(this).width();
         if (w > maxWidth) {
             maxWidth = w;
@@ -14,8 +19,9 @@ function get_images() {
         }
     });
 
-    if (maxWidth > 0) {
+    if (maxWidth > 0 && maxImgSrc.length > 0) {
         // we found a possible correct image
+        return maxImgSrc;
     }
     return "found no images...";
 }
