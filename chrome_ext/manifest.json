@@ -11,18 +11,22 @@
         "default_popup": "popup.html"
     },
 
+    // "background": {
+    //     "scripts": ["background.js"]
+    // },
+
     "content_scripts": [
     {
         //change 'matches' attribute to load content
         // script only in pages you want to.
-        "matches": ["http://*/*", "http://*/*"],
+        "matches": ["http://*/*", "https://*/*"],
         "css": ["basic.css"],
         "js": ["jquery.min.js", "contentscript.js"]
     }
     ],
 
-    // "permissions" : [
-    //         "tabs",
-    //         "http://*/*"
-    // ]
+    "permissions" : [
+            "activeTab",
+            "tabs"
+    ]
 }
