@@ -15,7 +15,8 @@ def get_point(event, x, y, flags, param):
         print (x, y)
         points.append([x, y])
         if len(points) % 5 == 0:
-            optimize()
+            res = optimize()
+            transform(res, img)
             # compute_centroid_pp()
 
 # Computes the principal point, or image center by finding the vanishing
@@ -52,7 +53,6 @@ def compute_pp():
     h1 = (np.dot(v1, v2) / mag_v1) * (v1 / mag_v1) + p0
 
     o = compute_intersect(v0, h0, v1, h1)
-    #print o
     compute_focal_length(v0, o, h0)
     return (v0, o, h0)
 
@@ -142,41 +142,66 @@ def compute_intersect(a1, a2, b1, b2):
 
 # TODO:
 # 1) is one edge enough? how do we best organize a1-a3 as global parameters?
-# 2) are three terms enough?
+# 2) do we need to adjust the origin to be central?
 
 def objective_function(x):
     obj = 0
     a1 = x[0]
-    a2 = x[1]
-    a3 = x[2]
-    a = x[3]
-    b = x[4]
-    c = x[5]
+    #a2 = x[1]
+    #a3 = x[2]
+    a = x[1]
+    b = x[2]
+    c = x[3]
+    x0 = x[4]
+    y0 = x[5]
     for i in range(0, len(points)):
         xd = points[i][0]
         yd = points[i][1]
-        r = (xd^2) + (yd^2)
-        denom = 1 + a1 * (r^2) + a2 * (r^4) + a3 * (r^6)
-        xu = xd/denom
-        yu = yd/denom
+        r = math.pow(math.pow(xd-x0,2) + math.pow(yd-y0,2), 0.5)
+        denom = 1 + a1 * math.pow(r,2) #+ a2 * math.pow(r,4) + a3 * math.pow(r,6)
+        xu = (xd-x0)/denom
+        yu = (yd-y0)/denom
         obj += math.fabs(a*xu + b*yu + c)
     return obj
 
 def optimize():
-    x0 = np.array([1,1,1,1,1,1])
-    b = [[-1000,1000]] * 6
-    cons = ({'type': 'eq', 'fun': lambda x: math.pow((x[3]),2) + math.pow((x[4]),2) - 1})
-    print opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)    
+    x0 = np.array([-12.08,-1,1,1,1,1]) #,0,0])
+    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [-1000,1000], [-1000,1000]] # [-1000,1000], [-1000,1000]]
+    cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1})
+    result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
+    print result
+    return result.x 
+
+def update(params):
+    for i in xrange(rows):
+        for j in xrange(cols):
+            r = math.pow(i,2) + math.pow(j,2)
+            denom = 1 + params[0] * math.pow(r,2) + params[1] * math.pow(r,4) + params[2] * math.pow(r,6)
+            map_x.itemset((i,j), i/denom)
+            map_y.itemset((i,j), j/denom)
+
+# correct distortion
+def transform(params, img):
+    global map_x, map_y, rows, cols
+    map_x = np.zeros(img.shape[:2], np.float32)
+    map_y = np.zeros(img.shape[:2], np.float32)
+    rows, cols = img.shape[:2]
+    update(params)
+    dst = cv2.remap(img, map_x, map_y, cv2.INTER_LINEAR)
+    cv2.imshow('result', dst)
+
+
 
 cv2.namedWindow('image')
 cv2.setMouseCallback('image', get_point)
-
-# other options: IMREAD_GRAYSCALE, IMREAD_UNCHANGED
 img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
-
 cv2.imshow('image', img)
-# press 'q' to exit
+
+#press 'q' to exit
 if cv2.waitKey(0) == ord('q'):
     cv2.destroyAllWindows()
+
+
+      
 
 
