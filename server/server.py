@@ -1,5 +1,4 @@
 from flask import Flask
-from flask import jsonify
 from flask import request
 
 
@@ -7,21 +6,14 @@ app = Flask(__name__)
 
 
 @app.route('/')
-def hello_world():
-    return 'Hello World!'
+def info():
+    return "<h1>Scoring and Correcting Distorted Images</h1> \
+    <h3>Tanay Mehta, Boris Treskunov, Grace Wang, Joseph Zhong</h3>"
 
 
-@app.route('/hello/world/world')
-def hello():
-    return "This is the specific hello world"
-
-
-# demonstrates flask debugging
-@app.route('/bad')
-def bad():
-    x = 0
-    y = 3
-    return y / x
+@app.route('/post/<image_url>')
+def get_image(image_url):
+    return "Trying to undistort: %s" % image_url
 
 
 @app.route('/hello/<thing>')
@@ -30,11 +22,6 @@ def hello_thing(thing):
     if request.args.get('bold', '0') != '0':
         result = "<b>%s</b>" % result
     return result
-
-
-@app.route('/data')
-def data():
-    return jsonify({"some": "data"})
 
 
 if __name__ == '__main__':
