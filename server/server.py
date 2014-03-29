@@ -16,6 +16,14 @@ def get_image(image_url):
     return "Trying to undistort: %s" % image_url
 
 
+# might have to do the below instead:
+# @app.route('/post', methods=['GET', 'POST'])
+# def get_image():
+#     if request.method == 'POST':
+#         # etc etc
+#         pass
+
+
 @app.route('/hello/<thing>')
 def hello_thing(thing):
     result = "Hello %s" % str(thing)
