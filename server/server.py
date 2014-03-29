@@ -1,6 +1,6 @@
 from flask import Flask
 from flask import request
-
+import urllib
 
 app = Flask(__name__)
 
@@ -16,7 +16,9 @@ def get_image(image_url):
     return "Trying to undistort: %s" % image_url
 
 
-# might have to do the below instead:
+# might have to do the below instead, or at the very least
+# encode urls before passing them as parameters... or both
+
 # @app.route('/post', methods=['GET', 'POST'])
 # def get_image():
 #     if request.method == 'POST':
