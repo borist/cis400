@@ -154,7 +154,7 @@ def objective_function(x):
     c = x[3]
     x0 = x[4]
     y0 = x[5]
-    for i in range(0, len(points)):
+    for i in range(len(points)):
         xd = points[i][0]
         yd = points[i][1]
         r = math.pow(math.pow(xd-x0,2) + math.pow(yd-y0,2), 0.5)
@@ -165,8 +165,9 @@ def objective_function(x):
     return obj
 
 def optimize():
-    x0 = np.array([-12.08,-1,1,1,1,1]) #,0,0])
-    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [-1000,1000], [-1000,1000]] # [-1000,1000], [-1000,1000]]
+    maxY, maxX = img.shape[:2]
+    x0 = np.array([0.1,1,0,0,maxX/2,maxY/2]) #,0,0])
+    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]] # [-1000,1000], [-1000,1000]]
     cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
     print result
