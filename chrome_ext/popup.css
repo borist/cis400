@@ -1,0 +1,20 @@
+#image_tbc {
+    width: 600px;
+}
+
+#hor_container {
+    width: 600px;
+    overflow: auto;
+    height: 100px;
+    white-space:nowrap;
+}
+
+.scroll_img {
+    margin-top: 20px;
+    width: 80px;
+    display:inline-block;
+}
+
+.main_img {
+    width: 600px;
+}
