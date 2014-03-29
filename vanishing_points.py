@@ -5,6 +5,7 @@ from scipy import optimize as opt
 import numpy as np
 import cv2
 import sys
+import math
 
 points = []
 
@@ -13,7 +14,7 @@ def get_point(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print (x, y)
         points.append([x, y])
-        if len(points) == 18:
+        if len(points) % 5 == 0:
             optimize()
             # compute_centroid_pp()
 
@@ -142,7 +143,6 @@ def compute_intersect(a1, a2, b1, b2):
 # TODO:
 # 1) is one edge enough? how do we best organize a1-a3 as global parameters?
 # 2) are three terms enough?
-# 3) which solution do we want? how many points gives us 1 solution? smarter guess?
 
 def objective_function(x):
     obj = 0
@@ -159,13 +159,14 @@ def objective_function(x):
         denom = 1 + a1 * (r^2) + a2 * (r^4) + a3 * (r^6)
         xu = xd/denom
         yu = yd/denom
-        obj += a*xu + b*yu + c
+        obj += math.fabs(a*xu + b*yu + c)
     return obj
 
 def optimize():
     x0 = np.array([1,1,1,1,1,1])
     b = [[-1000,1000]] * 6
-    print opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b)
+    cons = ({'type': 'eq', 'fun': lambda x: math.pow((x[3]),2) + math.pow((x[4]),2) - 1})
+    print opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)    
 
 cv2.namedWindow('image')
 cv2.setMouseCallback('image', get_point)
