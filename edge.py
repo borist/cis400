@@ -13,7 +13,7 @@ class Edge:
         x2,y2 = self.ep2
         return ((x1+x2)/2, (y1+y2)/2)
 
-# compute a vanishing point common to two edges
+# compute a vanishing point hypothesis common to two edges
 def vanishingPoint(edge1, edge2):
     x1, y1 = edge1.ep1
     x2, y2 = edge2.ep2
