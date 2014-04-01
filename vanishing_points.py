@@ -14,7 +14,7 @@ def get_point(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print (x, y)
         points.append([x, y])
-        if len(points) % 5 == 0:
+        if len(points) == 10:
             res = optimize()
             transform(res, img)
             # compute_centroid_pp()
@@ -142,56 +142,62 @@ def compute_intersect(a1, a2, b1, b2):
 
 # TODO:
 # 1) is one edge enough? how do we best organize a1-a3 as global parameters?
-# 2) do we need to adjust the origin to be central?
 
 def objective_function(x):
     obj = 0
     a1 = x[0]
-    #a2 = x[1]
-    #a3 = x[2]
     a = x[1]
     b = x[2]
     c = x[3]
-    x0 = x[4]
-    y0 = x[5]
+    d = x[4]
+    e = x[5]
+    f = x[6]
+    x0 = x[7]
+    y0 = x[8]
     for i in range(len(points)):
         xd = points[i][0]
         yd = points[i][1]
-        r = math.pow(math.pow(xd-x0,2) + math.pow(yd-y0,2), 0.5)
-        denom = 1 + a1 * math.pow(r,2) #+ a2 * math.pow(r,4) + a3 * math.pow(r,6)
+        r2 = math.pow(xd-x0,2) + math.pow(yd-y0,2)
+        denom = 1 + a1 * r2 
         xu = (xd-x0)/denom
         yu = (yd-y0)/denom
-        obj += math.fabs(a*xu + b*yu + c)
+        if i < 5:
+            obj += math.fabs(a*xu + b*yu + c)
+        else:
+            obj += math.fabs(d*xu + e*yu + f)
     return obj
 
 def optimize():
     maxY, maxX = img.shape[:2]
-    x0 = np.array([0.1,1,0,0,maxX/2,maxY/2]) #,0,0])
-    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]] # [-1000,1000], [-1000,1000]]
-    cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1})
+    x0 = np.array([0.1,1,0,0,1,0,0,maxX/2,maxY/2]) 
+    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]]
+    cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1},
+            {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
     print result
     return result.x 
 
+# correct distortion
 def update(params):
     for i in xrange(rows):
         for j in xrange(cols):
-            r = math.pow(i,2) + math.pow(j,2)
-            denom = 1 + params[0] * math.pow(r,2) + params[1] * math.pow(r,4) + params[2] * math.pow(r,6)
-            map_x.itemset((i,j), i/denom)
-            map_y.itemset((i,j), j/denom)
+            r2 = math.pow(i-params[7],2) + math.pow(j-params[8],2)
+            r2 = r2/10000 #I shouldn't need to do this, but r is so damn big it zooms in too much
+            denom = 1 + params[0] * r2
+            map_x.itemset((i,j), j/denom)
+            map_y.itemset((i,j), i/denom)
 
-# correct distortion
 def transform(params, img):
     global map_x, map_y, rows, cols
     map_x = np.zeros(img.shape[:2], np.float32)
     map_y = np.zeros(img.shape[:2], np.float32)
     rows, cols = img.shape[:2]
-    update(params)
-    dst = cv2.remap(img, map_x, map_y, cv2.INTER_LINEAR)
-    cv2.imshow('result', dst)
-
-
+    while(True):
+        update(params)
+        dst = cv2.remap(img, map_x, map_y, cv2.INTER_CUBIC)
+        cv2.imshow('result', dst)
+        if cv2.waitKey(0) == ord('q'):
+            break
 
 cv2.namedWindow('image')
 cv2.setMouseCallback('image', get_point)
