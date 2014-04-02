@@ -1,5 +1,15 @@
+.sbs {
+    width: 1000px;
+}
+
 #image_tbc {
-    width: 600px;
+    float:left;
+    width: 500px;
+}
+
+#image_con {
+    float: right;
+    width: 500px;
 }
 
 #hor_container {

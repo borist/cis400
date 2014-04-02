@@ -28,6 +28,25 @@ function get_images() {
     // return "found no images";
 }
 
+function get_images_on_page() {
+    var urls = get_images();
+    //urls[1] = dedupe(urls[1]);
+
+    // get the url of the largest image
+    var return_urls = urls[0];
+    return_urls = return_urls.concat("$_$");
+
+    // get the rest of the urls
+    var len = urls[1].length;
+    for (var i = 0; i < len; i++) {
+        var str = urls[1][i];
+        return_urls = return_urls.concat(str);
+        return_urls = return_urls.concat("$_$");
+    }
+
+    return return_urls;
+}
+
 function dedupe(urls) {
     var set = {};
     for (var i = 0; i < urls.length; i++) {
@@ -40,29 +59,46 @@ function dedupe(urls) {
    return urls;
 }
 
+
+function undistort_image(image_url) {
+    var post_url = "https://scoring-distortion.herokuapp.com/post/";
+    //var image_url = encodeURIComponent(image_url)
+    var encoded_post_url = post_url + image_url;
+
+    var xhr = new XMLHttpRequest();
+    xhr.open("GET", encoded_post_url, true);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState == 4) {
+            // JSON.parse does not evaluate the attacker's scripts.
+            var resp = jQuery.parseJSON(xhr.responseText);
+            var undist_url = resp.url;
+            console.log("undistorted url: ");
+            console.log(undist_url);
+            send_undistorted_image_to_popup(undist_url);
+      }
+    }
+    xhr.send();
+}
+
+
+function send_undistorted_image_to_popup(undist_url) {
+    console.log("attempting to send undistorted url back to popup");
+    // send message to popup.js with undistorted image url
+    chrome.runtime.sendMessage(undist_url, function() { /*response*/ });
+}
+
+
 chrome.extension.onMessage.addListener(function(msg, sender, sendResponse) {
     console.log("received message...");
     if (msg.text && (msg.text == "report_back")) {
-        var urls = get_images();
-        //urls[1] = dedupe(urls[1]);
-
-        // get the url of the largest image
-        var return_urls = urls[0];
-        return_urls = return_urls.concat("$_$");
-
-        // get the rest of the urls
-        var len = urls[1].length;
-        for (var i = 0; i < len; i++) {
-            var str = urls[1][i];
-            return_urls = return_urls.concat(str);
-            return_urls = return_urls.concat("$_$");
-        }
-
+        var return_urls = get_images_on_page();
         console.log("sending: ");
         console.log(return_urls);
 
-        // send a semicolon-delineated response
+        // send response back to popup window
         sendResponse(return_urls);
+    } else if (msg.text) {
+        undistort_image(msg.text);
     }
 });
 
