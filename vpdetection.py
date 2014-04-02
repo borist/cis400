@@ -59,9 +59,47 @@ def intersectAB(setA, setB):
 def jaccardDistance(setA, setB):
     return 1 - intersectAB(setA, setB)/unionAB(setA, setB)
 
-# construct the data structure that will hold the clusters
-def buildClusters(edgeList):
-    return
-# merge the clusters in the cluster list
-def mergeClusters():
-    return
+# construct the data structure that will hold the clusters which is a dictionary mapping edge indexes to preference sets
+def buildClusters(edgeList, prefMatrix):
+    i = 0
+    clusters = []
+    for edge in edgeList:
+        cluster = set(i), prefMatrix[i]
+        clusters.append(cluster)
+        i += 1
+    return clusters
+
+# merge two clusters
+def mergeClusters(cluster1, cluster2):
+    clusterset1, clustermat1 = cluster1
+    clusterset2, clustermat2 = cluster2
+    return union(clusterset1, clusterset2), intersectAB(clustermat1, clustermat2)
+
+# reduce clusters in cluster list
+def reduceClusters(clusterList):
+    while true:
+        #find minimum Jaccard distance
+        i = 0
+        minDist = 1
+        minCluster1 = ()
+        minCluster2 = ()
+
+        for cluster1 in clusterList[:]:
+            for cluster2 in clusterList[i+1:]:
+                cluster1Set = cluster1[0]
+                cluster2Set = cluster2[0]
+                newDist = jaccardDistance(cluster1Set, cluster2Set)
+                if newDist < minDist:
+                    minDist = newDist
+                    minCluster1 = cluster1
+                    minCluster2 = cluster2
+
+        if minDist == 1:
+            return clusterList
+
+
+        newCluster = mergeClusters(minCluster1, minCluster2)
+        clusterList.remove(minCluster1)
+        clusterList.remove(minCluster2)
+
+        clusterList.append(newCluster)
