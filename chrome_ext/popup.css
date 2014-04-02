@@ -1,4 +1,14 @@
+.sbs {
+    width: 1300px;
+}
+
 #image_tbc {
+    float:left;
+    width: 600px;
+}
+
+#image_con {
+    float: right;
     width: 600px;
 }
 

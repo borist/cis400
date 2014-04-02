@@ -44,15 +44,19 @@ def detect_calibrate_and_undistort(images, image_to_fix, show_calibration=False)
                 imgpoints.append(corners)
                 cv2.drawChessboardCorners(img, (7,6), corners, ret)
 
+            i = 1
             if show_calibration:
                 try:
                     cv2.imshow('img', img)
+                    if i == 12:
+                        cv2.imwrite(PATH_TO_CALIB + 'calibinter.png',img)
                     time.sleep(.5)
                     cv2.destroyWindow('img')
                 except Exception, e:
                     exc_type, exc_value, exc_traceback = sys.exc_info()
                     traceback.print_tb(exc_traceback, limit=1, file=sys.stdout)
                     print "error: ", e
+                i += 1
 
 
     # ------------------------------------
