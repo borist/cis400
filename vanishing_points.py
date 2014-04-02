@@ -169,7 +169,7 @@ def objective_function(x):
 
 def optimize():
     maxY, maxX = img.shape[:2]
-    x0 = np.array([0.1,1,0,0,1,0,0,maxX/2,maxY/2]) 
+    x0 = np.array([0.0001,1,0,0,1,0,0,maxX/2,maxY/2]) 
     b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]]
     cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1},
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
@@ -182,10 +182,16 @@ def update(params):
     for i in xrange(rows):
         for j in xrange(cols):
             r2 = math.pow(i-params[7],2) + math.pow(j-params[8],2)
-            r2 = r2/10000 #I shouldn't need to do this, but r is so damn big it zooms in too much
+            #r2 = r2/10000 #I shouldn't need to do this, but r is so damn big it zooms in too much
             denom = 1 + params[0] * r2
-            map_x.itemset((i,j), j/denom)
-            map_y.itemset((i,j), i/denom)
+            map_x.itemset((i,j), ((j-params[8])/denom) + params[8])
+            map_y.itemset((i,j), ((i-params[7])/denom) + params[7])
+
+def updatef(params): #decreases focal length by factor of 2 (accounting for centralization)
+    for i in xrange(rows):
+        for j in xrange(cols):
+            map_x.itemset((i,j), ((j-params[8])/2) + params[8])
+            map_y.itemset((i,j), ((i-params[7])/2) + params[7])
 
 def transform(params, img):
     global map_x, map_y, rows, cols
@@ -193,7 +199,7 @@ def transform(params, img):
     map_y = np.zeros(img.shape[:2], np.float32)
     rows, cols = img.shape[:2]
     while(True):
-        update(params)
+        updatef(params)
         dst = cv2.remap(img, map_x, map_y, cv2.INTER_CUBIC)
         cv2.imshow('result', dst)
         if cv2.waitKey(0) == ord('q'):
