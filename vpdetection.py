@@ -11,7 +11,10 @@
 import numpy as np
 import sys
 import random
-import edge
+import math
+from edge import Edge, vanishingPoint
+import subprocess
+#from matplotlib import pyplot as plt
 
 def buildPrefMatrix(edgeList, phi, M):
     numEdges = len(edgeList)
@@ -34,26 +37,28 @@ def buildPrefMatrix(edgeList, phi, M):
 
     return prefMatrix
 
-# determine D(v_m,edge)
+# determine D(v_m,edge) the implementation at the moment is not as described in the paper
 def calc_D_lt_phi(vph, edge, phi):
     x1, y1 = edge.ep1
     x2, y2 = edge.ep2
-
-    m1 = (y2 - y1)/(x2 - x1)
-    b1 = (m1 * x1) + y1
-
     vpx, vpy = vph
+    if (x2 - x1 != 0):
+        m1 = (y2 - y1)/(x2 - x1)
+        b1 = (m1 * x1) + y1
 
-    D = math.fabs(vpy - (m1 * vpx) - b1)/math.sqrt(m1 ** 2 + 1)
-    return (D <= phi)
+        D = math.fabs(vpy - (m1 * vpx) - b1)/math.sqrt(m1 ** 2 + 1)
+        return (D <= phi)
+    else:
+        D = math.fabs(vpx - x1)
+        return (D <= phi)
 
 # size of the set union of two preference sets
 def unionAB(setA, setB):
-    return reduce (lambda x, y: x + y, map(lambda x, y: x or y, setA, setB))
+    return sum([x or y for x in setA for y in setB])
 
 # size of the set intersection of two preference sets
 def intersectAB(setA, setB):
-    return reduce (lambda x, y: x + y, map(lambda x, y: x and y, setA, setB))
+    return sum([x and y for x in setA for y in setB])
 
 # calculates Jaccard Distance between two groups.
 def jaccardDistance(setA, setB):
@@ -64,7 +69,7 @@ def buildClusters(edgeList, prefMatrix):
     i = 0
     clusters = []
     for edge in edgeList:
-        cluster = set(i), prefMatrix[i]
+        cluster = (set([i]), prefMatrix[i])
         clusters.append(cluster)
         i += 1
     return clusters
@@ -73,11 +78,11 @@ def buildClusters(edgeList, prefMatrix):
 def mergeClusters(cluster1, cluster2):
     clusterset1, clustermat1 = cluster1
     clusterset2, clustermat2 = cluster2
-    return union(clusterset1, clusterset2), intersectAB(clustermat1, clustermat2)
+    return clusterset1 ^ clusterset2, [x and y for x in clustermat1 for y in clustermat2]
 
 # reduce clusters in cluster list
 def reduceClusters(clusterList):
-    while true:
+    while True:
         #find minimum Jaccard distance
         i = 0
         minDist = 1
@@ -97,9 +102,37 @@ def reduceClusters(clusterList):
         if minDist == 1:
             return clusterList
 
+        if (minCluster1 != minCluster2):
+            newCluster = mergeClusters(minCluster1, minCluster2)
+            print "Merge Clusters %s, %s" % (minCluster1[0], minCluster2[0])
+            clusterList.remove(minCluster1)
+            clusterList.remove(minCluster2)
+            clusterList.append(newCluster)
 
-        newCluster = mergeClusters(minCluster1, minCluster2)
-        clusterList.remove(minCluster1)
-        clusterList.remove(minCluster2)
+def main(argv=None):
+    if argv == None:
+        argv = sys.argv
 
-        clusterList.append(newCluster)
+    inputfile = argv[1]
+    outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
+    cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
+    lines = subprocess.check_output(cmd)
+
+    edgeList = []
+    lines = lines.strip()
+
+    for line in lines.split('\n'):
+        edgeParams = line.split()
+        e1 = (float(edgeParams[0]), float(edgeParams[1]))
+        e2 = (float(edgeParams[2]), float(edgeParams[3]))
+        newEdge = Edge(e1, e2)
+        edgeList.append(newEdge)
+
+    prefMatrix = buildPrefMatrix(edgeList, 2, 500)
+    clusters = buildClusters(edgeList, prefMatrix)
+    reducedClusters = reduceClusters(clusters)
+    print reducedClusters
+
+
+if __name__ == "__main__":
+    main(sys.argv)
