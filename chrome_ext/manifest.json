@@ -11,9 +11,9 @@
         "default_popup": "popup.html"
     },
 
-    // "background": {
-    //     "scripts": ["background.js"]
-    // },
+    "background": {
+        "scripts": ["jquery.min.js", "background.js"]
+    },
 
     "content_scripts": [
     {
@@ -27,6 +27,7 @@
 
     "permissions" : [
             "activeTab",
-            "tabs"
+            "tabs",
+            "http://scoring-distortion.herokuapp.com/"
     ]
 }
