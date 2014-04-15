@@ -1,10 +1,12 @@
 #edge class defines an edge used for vanishing point detection
 
+import sys
+
 class Edge:
     def __init__(self, endpoint1, endpoint2):
         #endpoint 1
-        self.ep1 = endpoint1
-        self.ep2 = endpoint2
+        self.ep1 = (int(endpoint1[0]), int(endpoint1[1]))
+        self.ep2 = (int(endpoint2[0]), int(endpoint2[1]))
 
     def __repr__(self):
         return "(endpoint1: %s endpoint2: %s)" % (self.ep1, self.ep2)
@@ -41,7 +43,10 @@ def vanishingPoint(edge1, edge2):
         m2 = (y4-y3)/(x4-x3)
         b2 = (m2 * x3) + y3
 
-    x = (b1 - b2)/(m2 - m1)
-    y = (m2 * x) + b2
+    if (m2 - m1 != 0):
+        x = (b1 - b2)/(m2 - m1)
+        y = (m2 * x) + b2
 
-    return (x, y)
+        return (x, y)
+    else:
+        return (-1,-1)

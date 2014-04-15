@@ -1,3 +1,5 @@
+#!/usr/bin/python
+
 #python implementation of the algorithm described in Non-Iterative Approach for
 #Fast and Accurate Vanishing Point Detection by Jean-Philippe Tardif
 
@@ -14,11 +16,15 @@ import random
 import math
 from edge import Edge, vanishingPoint
 import subprocess
+import cv2
 #from matplotlib import pyplot as plt
 
 def buildPrefMatrix(edgeList, phi, M):
     numEdges = len(edgeList)
-    prefMatrix = np.zeros(numEdges * M).reshape((numEdges, M))
+
+    prefMatrix = []
+    for edge in edgeList:
+        prefMatrix.append(([edge], set()))
 
     for i in range(M):
         # sample 2 edges and determine the vanishing point hypothesis
@@ -27,13 +33,12 @@ def buildPrefMatrix(edgeList, phi, M):
 
         #given the vanishing point hypothesis, determine if the particular edge
         #votes for that hypothesis
-        j = 0
-        for edge in edgeList:
-            if (calc_D_lt_phi(vph, edge, phi)):
-                prefMatrix[j,i] = 1
-            else:
-                prefMatrix[j,i] = 0
-            j += 1
+        for (edges, hypotheses) in prefMatrix:
+            if (calc_D_lt_phi(vph, edges[0], phi)):
+                hypotheses.add(i)
+
+    #for (edges, hypotheses) in prefMatrix:
+        #print "(%s, %s)" % (edges, hypotheses)
 
     return prefMatrix
 
@@ -42,72 +47,74 @@ def calc_D_lt_phi(vph, edge, phi):
     x1, y1 = edge.ep1
     x2, y2 = edge.ep2
     vpx, vpy = vph
-    if (x2 - x1 != 0):
-        m1 = (y2 - y1)/(x2 - x1)
-        b1 = (m1 * x1) + y1
 
-        D = math.fabs(vpy - (m1 * vpx) - b1)/math.sqrt(m1 ** 2 + 1)
-        return (D <= phi)
+    #find the centroid of the edge
+    xc = (x1 + x2)/2
+    yc = (y1 + y2)/2
+
+    #calculate parameters of line between centroid and vph
+    if (xc - vpx != 0):
+        ml = (yc - vpy)/(xc - vpx)
+        bl = (ml * xc) + yc
+
+        D = math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
+
+        return D <= phi
     else:
-        D = math.fabs(vpx - x1)
-        return (D <= phi)
-
-# size of the set union of two preference sets
-def unionAB(setA, setB):
-    return sum([x or y for x in setA for y in setB])
-
-# size of the set intersection of two preference sets
-def intersectAB(setA, setB):
-    return sum([x and y for x in setA for y in setB])
+        D = math.fabs(x1 - xc)
+        return D <= phi
 
 # calculates Jaccard Distance between two groups.
 def jaccardDistance(setA, setB):
-    return 1 - intersectAB(setA, setB)/unionAB(setA, setB)
-
-# construct the data structure that will hold the clusters which is a dictionary mapping edge indexes to preference sets
-def buildClusters(edgeList, prefMatrix):
-    i = 0
-    clusters = []
-    for edge in edgeList:
-        cluster = (set([i]), prefMatrix[i])
-        clusters.append(cluster)
-        i += 1
-    return clusters
-
-# merge two clusters
-def mergeClusters(cluster1, cluster2):
-    clusterset1, clustermat1 = cluster1
-    clusterset2, clustermat2 = cluster2
-    return clusterset1 ^ clusterset2, [x and y for x in clustermat1 for y in clustermat2]
+    if (len(setA | setB) > 0):
+        return 1 - len(setA & setB)/len(setA | setB)
+    else:
+        return -1
 
 # reduce clusters in cluster list
 def reduceClusters(clusterList):
+    # keep a table of Jaccard distances
+    validIndices = range(len(clusterList))
+    distances = {}
+
+    for ii, i in enumerate(validIndices):
+        for j in validIndices[ii+1:]:
+            distances[(i,j)] = -1
+
+    edgelist, preferenceSets = zip(*clusterList)
+    outliers = []
+
     while True:
-        #find minimum Jaccard distance
-        i = 0
-        minDist = 1
-        minCluster1 = ()
-        minCluster2 = ()
+        minDistance = 2.0
+        minPair = (-1, -1)
+        for ii, i in enumerate(validIndices):
+            for j in validIndices[ii+1:]:
+                #if not valid, update
+                if distances[(i,j)] < 0:
+                    distances[(i,j)] = jaccardDistance(preferenceSets[i], preferenceSets[j])
+                    outliers.append(edgelist[i])
+                    outliers.append(edgelist[j])
 
-        for cluster1 in clusterList[:]:
-            for cluster2 in clusterList[i+1:]:
-                cluster1Set = cluster1[0]
-                cluster2Set = cluster2[0]
-                newDist = jaccardDistance(cluster1Set, cluster2Set)
-                if newDist < minDist:
-                    minDist = newDist
-                    minCluster1 = cluster1
-                    minCluster2 = cluster2
+                #update the minimum distance
+                if distances[(i,j)] < minDistance and distances[(i,j)] >= 0:
+                    minPair = i,j
+                    minDistance = distances[(i,j)]
 
-        if minDist == 1:
-            return clusterList
+        print "minDistance found: %s" % minDistance
+        if minDistance >= 1.0:
+            break
 
-        if (minCluster1 != minCluster2):
-            newCluster = mergeClusters(minCluster1, minCluster2)
-            print "Merge Clusters %s, %s" % (minCluster1[0], minCluster2[0])
-            clusterList.remove(minCluster1)
-            clusterList.remove(minCluster2)
-            clusterList.append(newCluster)
+        #update the distances
+        print "merging %s with %s" % minPair
+        edgelist[minPair[0]].extend(edgelist[minPair[1]])
+        preferenceSets[minPair[0]].intersection_update(preferenceSets[minPair[1]])
+        validIndices.remove(minPair[1])
+
+        #mark distances as invalid
+        for i in validIndices:
+            distances[(minPair[0],i)] = distances[(i,minPair[0])] = -1
+
+    return edgelist, preferenceSets
 
 def main(argv=None):
     if argv == None:
@@ -128,11 +135,41 @@ def main(argv=None):
         newEdge = Edge(e1, e2)
         edgeList.append(newEdge)
 
-    prefMatrix = buildPrefMatrix(edgeList, 2, 500)
-    clusters = buildClusters(edgeList, prefMatrix)
-    reducedClusters = reduceClusters(clusters)
-    print reducedClusters
+    prefMatrix = buildPrefMatrix(edgeList, 10, 5 * len(edgeList))
+    print "starting clusters: %s" % len(edgeList)
+    reducedClusters = reduceClusters(prefMatrix)
 
+    reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 1]
+    print "reduced to %s clusters" % len(reducedEdges)
+
+    cv2.namedWindow('image')
+    img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
+
+    colorlist = [(255,0,0),
+                 (0,255,0),
+                 (0,0,255),
+                 (255,255,255),
+                 (255,0,255),
+                 (255,255,0),
+                 (0,255,255),
+                 (255,153,0),
+                 (255,255,102),
+                 (51,51,204),
+                 ]
+
+    k = 0
+    for edgeCluster in reducedClusters[0]:
+        if len(edgeCluster) > 1:
+            for edge in edgeCluster:
+                print edge
+                cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10])
+            k += 1
+
+
+    cv2.imshow('image', img)
+    #press 'q' to exit
+    if cv2.waitKey(0) == ord('q'):
+        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main(sys.argv)
