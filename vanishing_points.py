@@ -14,7 +14,7 @@ def get_point(event, x, y, flags, param):
     if event == cv2.EVENT_LBUTTONDOWN:
         print (x, y)
         points.append([x, y])
-        if len(points) == 10:
+        if len(points) == 20:
             res = optimize()
             transform(res, img)
             # compute_centroid_pp()
@@ -159,18 +159,18 @@ def objective_function(x):
         yd = points[i][1]
         r2 = math.pow(xd-x0,2) + math.pow(yd-y0,2)
         denom = 1 + a1 * r2 
-        xu = (xd-x0)/denom
-        yu = (yd-y0)/denom
-        if i < 5:
-            obj += math.fabs(a*xu + b*yu + c)
+        xu = (xd-x0)
+        yu = (yd-y0)
+        if i < 10:
+            obj += math.fabs(a*xu + b*yu + c*denom)
         else:
-            obj += math.fabs(d*xu + e*yu + f)
+            obj += math.fabs(d*xu + e*yu + f*denom)
     return obj
 
 def optimize():
     maxY, maxX = img.shape[:2]
-    x0 = np.array([0.0001,1,0,0,1,0,0,maxX/2,maxY/2]) 
-    b = [[-1000,1000], [-1,1], [-1,1], [-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]]
+    x0 = np.array([.1,.70,.70,0,.70,.70,0,maxX/2,maxY/2]) 
+    b = [[-.1,.1], [-1,1], [-1,1], [-1000,1000], [-1,1], [-1,1], [-1000,1000], [0,maxX], [0,maxY]]
     cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1},
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
@@ -199,7 +199,7 @@ def transform(params, img):
     map_y = np.zeros(img.shape[:2], np.float32)
     rows, cols = img.shape[:2]
     while(True):
-        updatef(params)
+        update(params)
         dst = cv2.remap(img, map_x, map_y, cv2.INTER_CUBIC)
         cv2.imshow('result', dst)
         if cv2.waitKey(0) == ord('q'):
