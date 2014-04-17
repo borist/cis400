@@ -31,18 +31,35 @@ def buildPrefMatrix(edgeList, phi, M):
         edgeSample = random.sample(xrange(numEdges), 2)
         vph = vanishingPoint(edgeList[edgeSample[0]], edgeList[edgeSample[1]])
 
+        cv2.namedWindow('image')
+        img = cv2.imread("./images/high_contrast/high1.pgm", cv2.IMREAD_COLOR)
+        cv2.circle(img, vph, 10, (0,0,255))
+        cv2.line(img, edgeList[edgeSample[0]].ep1, edgeList[edgeSample[0]].ep2, (0,0,255))
+        cv2.line(img, edgeList[edgeSample[1]].ep1, edgeList[edgeSample[1]].ep2, (0,0,255))
+        print "plotting (%s,%s)" % vph
+
+        cv2.imshow('image', img)
+        #press 'q' to exit
+        if cv2.waitKey(0) == ord('q'):
+            cv2.destroyAllWindows()
+        if cv2.waitKey(0) == ord('x'):
+            break
+
         #given the vanishing point hypothesis, determine if the particular edge
         #votes for that hypothesis
         for (edges, hypotheses) in prefMatrix:
             if (calc_D_lt_phi(vph, edges[0], phi)):
                 hypotheses.add(i)
 
-    #for (edges, hypotheses) in prefMatrix:
-        #print "(%s, %s)" % (edges, hypotheses)
+    for (edges, hypotheses) in prefMatrix:
+        print "(%s, %s)" % (edges, hypotheses)
+
+
+
 
     return prefMatrix
 
-# determine D(v_m,edge) the implementation at the moment is not as described in the paper
+# determine D(v_m,edge)
 def calc_D_lt_phi(vph, edge, phi):
     x1, y1 = edge.ep1
     x2, y2 = edge.ep2
@@ -58,7 +75,6 @@ def calc_D_lt_phi(vph, edge, phi):
         bl = (ml * xc) + yc
 
         D = math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
-
         return D <= phi
     else:
         D = math.fabs(x1 - xc)
@@ -69,7 +85,7 @@ def jaccardDistance(setA, setB):
     if (len(setA | setB) > 0):
         return 1 - len(setA & setB)/len(setA | setB)
     else:
-        return -1
+        return 1
 
 # reduce clusters in cluster list
 def reduceClusters(clusterList):
@@ -92,8 +108,6 @@ def reduceClusters(clusterList):
                 #if not valid, update
                 if distances[(i,j)] < 0:
                     distances[(i,j)] = jaccardDistance(preferenceSets[i], preferenceSets[j])
-                    outliers.append(edgelist[i])
-                    outliers.append(edgelist[j])
 
                 #update the minimum distance
                 if distances[(i,j)] < minDistance and distances[(i,j)] >= 0:
@@ -130,12 +144,14 @@ def main(argv=None):
 
     for line in lines.split('\n'):
         edgeParams = line.split()
-        e1 = (float(edgeParams[0]), float(edgeParams[1]))
-        e2 = (float(edgeParams[2]), float(edgeParams[3]))
+        e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
+        e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        edgeList.append(newEdge)
+        if (newEdge.length > 100):
+            edgeList.append(newEdge)
 
-    prefMatrix = buildPrefMatrix(edgeList, 10, 5 * len(edgeList))
+    prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
+
     print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
 
