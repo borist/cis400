@@ -177,9 +177,9 @@ def main(argv=None):
 
     k = 0
     for edgeCluster in reducedClusters[0]:
-        if len(edgeCluster) > 1:
+        print edgeCluster
+        if len(edgeCluster) > 2:
             for edge in edgeCluster:
-                print edge
                 cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10])
             k += 1
 
