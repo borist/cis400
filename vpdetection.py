@@ -10,6 +10,7 @@
 # phi = 2 ; consensus threshold
 # M = 500 ; number of vp hypotheses
 
+from __future__ import division
 import numpy as np
 import sys
 import random
@@ -31,19 +32,20 @@ def buildPrefMatrix(edgeList, phi, M):
         edgeSample = random.sample(xrange(numEdges), 2)
         vph = vanishingPoint(edgeList[edgeSample[0]], edgeList[edgeSample[1]])
 
-        cv2.namedWindow('image')
-        img = cv2.imread("./images/high_contrast/high1.pgm", cv2.IMREAD_COLOR)
-        cv2.circle(img, vph, 10, (0,0,255))
-        cv2.line(img, edgeList[edgeSample[0]].ep1, edgeList[edgeSample[0]].ep2, (0,0,255))
-        cv2.line(img, edgeList[edgeSample[1]].ep1, edgeList[edgeSample[1]].ep2, (0,0,255))
-        print "plotting (%s,%s)" % vph
+        #cv2.namedWindow('image')
+        #img = cv2.imread("./images/high_contrast/high1.pgm", cv2.IMREAD_COLOR)
+        #cv2.circle(img, vph, 10, (0,0,255))
+        #cv2.line(img, edgeList[edgeSample[0]].ep1, edgeList[edgeSample[0]].ep2, (0,0,255))
+        #cv2.line(img, edgeList[edgeSample[1]].ep1, edgeList[edgeSample[1]].ep2, (0,0,255))
+        #print "plotting (%s,%s)" % vph
+        #print "with lines %s and %s" % (edgeList[edgeSample[0]], edgeList[edgeSample[1]])
 
-        cv2.imshow('image', img)
+        #cv2.imshow('image', img)
         #press 'q' to exit
-        if cv2.waitKey(0) == ord('q'):
-            cv2.destroyAllWindows()
-        if cv2.waitKey(0) == ord('x'):
-            break
+        #if cv2.waitKey(0) == ord('q'):
+            #cv2.destroyAllWindows()
+        #if cv2.waitKey(0) == ord('x'):
+            #break
 
         #given the vanishing point hypothesis, determine if the particular edge
         #votes for that hypothesis
@@ -147,7 +149,7 @@ def main(argv=None):
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > 100):
+        if (newEdge.length > 30):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
