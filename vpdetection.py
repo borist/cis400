@@ -11,13 +11,14 @@
 # M = 500 ; number of vp hypotheses
 
 from __future__ import division
-import numpy as np
-import sys
-import random
-import math
-from edge import Edge, vanishingPoint
-import subprocess
 import cv2
+from edge import Edge, vanishingPoint
+from itertools import combinations
+import math
+import numpy as np
+import random
+import subprocess
+import sys
 #from matplotlib import pyplot as plt
 
 def buildPrefMatrix(edgeList, phi, M):
@@ -58,8 +59,7 @@ def buildPrefMatrix(edgeList, phi, M):
 
     return prefMatrix
 
-# determine D(v_m,edge)
-def calc_D_lt_phi(vph, edge, phi):
+def calc_D(vph, edge):
     x1, y1 = edge.ep1
     x2, y2 = edge.ep2
     vpx, vpy = vph
@@ -70,14 +70,13 @@ def calc_D_lt_phi(vph, edge, phi):
 
     #calculate parameters of line between centroid and vph
     if (xc - vpx != 0):
-        ml = (yc - vpy)/(xc - vpx)
-        bl = (ml * xc) + yc
-
-        D = math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
-        return D <= phi
+        return math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
     else:
-        D = math.fabs(x1 - xc)
-        return D <= phi
+        return math.fabs(x1 - xc)
+
+# Determine D(v_m,edge)
+def calc_D_lt_phi(vph, edge, phi):
+    return calc_D(vph, edge) <= phi
 
 # calculates Jaccard Distance between two groups.
 def jaccardDistance(setA, setB):
@@ -131,11 +130,7 @@ def reduceClusters(clusterList):
 
 # Input: a list of edges. Output: vanishing point corresponding to these edges.
 def calculateVanishingPoint(cluster):
-    points = []
-    for i, e1 in enumerate(cluster):
-        for j, e2 in enumerate(cluster):
-            if i != j:
-                points.append(vanishingPoint(e1, e2))
+    points = [vanishingPoint(e1, e2) for (e1, e2) in combinations(cluster, 2)]
 
     # find the centroid of these points
     totalX = 0
@@ -146,6 +141,31 @@ def calculateVanishingPoint(cluster):
         totalY += y
         k += 1
     return (totalX / k, totalY / k)
+
+def null(A, eps=1e-3):
+    u,s,vh = np.linalg.svd(A, full_matrices=1, compute_uv=1)
+    null_space = np.compress(s <= eps, vh, axis=0)
+    return null_space.T
+
+# Input: takes in a list of 3 tuples, each representing a vanishing point. Each tuple is in the form ((x, y), [Edge])
+def calculateManhattanDist(vps):
+    v1 = vps[0][0]
+    v2 = vps[1][0]
+    v3 = vps[2][0]
+
+    v1_p = null(np.matrix([v2, v3]))
+    v2_p = null(np.matrix([v1, v3]))
+    v3_p = null(np.matrix([v1, v2]))
+
+    v1Err = calculateConsistency(v1_p, vps[0][1])
+    v2Err = calculateConsistency(v2_p, vps[1][1])
+    v3Err = calculateConsistency(v3_p, vps[2][1])
+
+    return max(v1Err, v2Err, v3Err)
+
+# Helper function to calculateManhattanDist
+def calculateConsistency(v, edges):
+    return np.mean([calc_D(v, edge) for edge in edges])
 
 def main(argv=None):
     if argv == None:
@@ -174,6 +194,18 @@ def main(argv=None):
 
     reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 1]
     print "reduced to %s clusters" % len(reducedEdges)
+
+    # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
+    vps = [(vanishingPoint(cluster), cluster) for cluster in reducedEdges]
+
+    # compute Manhattan distance
+    minDist = sys.maxint
+    for (t1, t2, t3) in combinations(vps, 3):
+        dist = calculateManhattanDist(t1, t2, t3)
+        if (dist < minDist):
+            triplet = (t1, t2, t3)
+    print "final vanishing points"
+    print triplet
 
     cv2.namedWindow('image')
     img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
