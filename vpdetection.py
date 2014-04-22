@@ -19,7 +19,6 @@ import numpy as np
 import random
 import subprocess
 import sys
-#from matplotlib import pyplot as plt
 
 # edgeList - list of edges
 # phi - voting parameter (distance in pixels between endpoint of an edge and line between vanishing point and edge midpoint)
@@ -60,11 +59,6 @@ def buildPrefMatrix(edgeList, phi, M):
             if (calc_D_lt_phi(vph, edges[0], phi)):
                 hypotheses.add(i)
 
-    """
-    for (edges, hypotheses) in prefMatrix:
-        print "(%s, %s)" % (edges, hypotheses)
-    """
-
     return prefMatrix
 
 def calc_D(vph, edge):
@@ -78,9 +72,9 @@ def calc_D(vph, edge):
 
     #calculate parameters of line between centroid and vph
     if (xc - vpx != 0):
-        ml = (yc - vpy)/(xc - vpx)
-        bl = (ml * xc) + yc
-        return math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
+        # calculations relative to centroid
+        m = (vpy - yc) / (vpx - xc)
+        return math.fabs(m * (x1 - xc) - (y1 - yc)) / math.sqrt(m ** 2 + 1)
     else:
         return math.fabs(x1 - xc)
 
@@ -142,14 +136,9 @@ def calculateVanishingPoint(cluster):
     points = [vanishingPoint(e1, e2) for (e1, e2) in combinations(cluster, 2)]
 
     # find the centroid of these points
-    totalX = 0
-    totalY = 0
-    k = 0
-    for (x, y) in points:
-        totalX += x
-        totalY += y
-        k += 1
-    return (totalX / k, totalY / k)
+    avgX = np.mean([x for (x, y) in points])
+    avgY = np.mean([y for (x, y) in points])
+    return (avgX, avgY)
 
 def null(A, eps=1e-3):
     u,s,vh = np.linalg.svd(A, full_matrices=1, compute_uv=1)
@@ -209,20 +198,6 @@ def main(argv=None):
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
     vps = [(calculateVanishingPoint(cluster), cluster) for cluster in reducedEdges]
 
-    # compute Manhattan distance
-    minDist = sys.maxint
-    for t in combinations(vps, 3):
-        dist = calculateManhattanDist(t)
-        if (dist < minDist):
-            print "distance %d" % dist
-            minDist = dist
-            triplet = t
-    print "final vanishing points"
-    print triplet
-
-    cv2.namedWindow('image')
-    img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
-
     colorlist = [(255,0,0),
                  (0,255,0),
                  (0,0,255),
@@ -235,24 +210,39 @@ def main(argv=None):
                  (51,51,204),
                  ]
 
+    # compute Manhattan distance
+    minDist = sys.float_info.max
+    for t in combinations(vps, 3):
+        dist = calculateManhattanDist(t)
+        if (dist < minDist):
+            print "distance %f" % dist
+            minDist = dist
+            triplet = t
+            print triplet
+
+            cv2.namedWindow('image')
+            img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
+
+            k = 0
+            for (v, edges) in triplet:
+                for edge in edges:
+                    cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+                k += 1
+
+            cv2.imshow('image', img)
+            #press 'q' to exit
+            if cv2.waitKey(0) == ord('q'):
+                cv2.destroyAllWindows()
+
+    #print "final vanishing points"
+
+    """
     k = 0
     for edgeCluster in reducedEdges:
         for edge in edgeCluster:
-            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % len(colorlist)], 2) # thickness 2
         k += 1
     """
-    k = 0
-    for (v, edges) in triplet:
-        for edge in edges:
-            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
-        k += 1
-    """
-
-
-    cv2.imshow('image', img)
-    #press 'q' to exit
-    if cv2.waitKey(0) == ord('q'):
-        cv2.destroyAllWindows()
 
 if __name__ == "__main__":
     main(sys.argv)
