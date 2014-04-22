@@ -132,6 +132,10 @@ def reduceClusters(clusterList):
 
     return edgelist, preferenceSets
 
+def calculateVanishingPoint(cluster):
+
+    return []
+
 def main(argv=None):
     if argv == None:
         argv = sys.argv
