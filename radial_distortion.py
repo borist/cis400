@@ -12,15 +12,6 @@ points = []
 x0 = 0
 y0 = 0
 
-# mouse callback function
-def get_point(event, x, y, flags, param):
-    if event == cv2.EVENT_LBUTTONDOWN:
-        print (x, y)
-        points.append([x, y])
-        if len(points) == 10:
-            res = optimize()
-            transform(res, img) 
-
 def objective_function(x):
     obj = 0
     a1 = x[0]
@@ -64,14 +55,14 @@ def hough_circles(img):
         x = x-0.5
         circles = cv2.HoughCircles(cimg,cv.CV_HOUGH_GRADIENT,1,.0001,param1=100,param2=x,minRadius=minR,maxRadius=maxR)
 
-    for i in circles[0,:]:
-        cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
-        cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
+    #for i in circles[0,:]:
+    #  cv2.circle(cimg,(i[0],i[1]),i[2],(0,255,0),2)
+    #  cv2.circle(cimg,(i[0],i[1]),2,(0,0,255),3)
 
-    while(True):
-        cv2.imshow('detected circles',cimg)
-        if cv2.waitKey(0) == ord('q'):
-            break
+    #while(True):
+    #    cv2.imshow('detected circles',cimg)
+    #    if cv2.waitKey(0) == ord('q'):
+    #        break
     return circles
 
 # correct distortion
@@ -79,7 +70,6 @@ def update(params):
     for i in xrange(rows):
         for j in xrange(cols):
             r2 = math.pow(i-params[7],2) + math.pow(j-params[8],2)
-            #r2 = r2/10000 #I shouldn't need to do this, but r is so damn big it zooms in too much
             denom = 1 + params[0] * r2
             map_x.itemset((i,j), ((j-params[8])*denom) + params[8])
             map_y.itemset((i,j), ((i-params[7])*denom) + params[7])
@@ -96,50 +86,50 @@ def transform(params, img):
         if cv2.waitKey(0) == ord('q'):
             break
 
-cv2.namedWindow('image')
-cv2.setMouseCallback('image', get_point)
-img = cv2.imread(sys.argv[1])
-cv2.imshow('image', img)
-result = hough_circles(img)
+def main(argv=None):
+    cv2.namedWindow('image')
+    img = cv2.imread(argv[1])
+    #cv2.imshow('image', img)
+    result = hough_circles(img)
 
-#pick 2 closest circles
-minDist = float("inf")
-circle1 = None
-circle2 = None
-for i in result[0,:]:
-    for j in result[0,:]:
-        dist = (i[0] - j[0])**2 + (i[1] - j[1])**2
-        if (dist < minDist and dist != 0):
-            circle1 = i
-            circle2 = j
-            minDist = dist
+    #pick 2 closest circles
+    minDist = float("inf")
+    circle1 = None
+    circle2 = None
+    for i in result[0,:]:
+        for j in result[0,:]:
+            dist = (i[0] - j[0])**2 + (i[1] - j[1])**2
+            if (dist < minDist and dist != 0):
+                circle1 = i
+                circle2 = j
+                minDist = dist
 
-#run fitting on 2 closest circles
-#compute average center
-x0 = (circle1[0] + circle2[0])/2
-y0 = (circle1[1] + circle2[1])/2
+    #run fitting on 2 closest circles
+    #compute average center
+    x0 = (circle1[0] + circle2[0])/2
+    y0 = (circle1[1] + circle2[1])/2
 
-maxY, maxX = img.shape[:2]
-for i in range(0,360,36):
-    x = math.cos(math.radians(i)) * circle1[2] + x0
-    y = math.sin(math.radians(i)) * circle1[2] + y0
-    print (x,y)
-    if(x < maxX and y < maxY):
-        points.append([x,y])
+    maxY, maxX = img.shape[:2]
+    for i in range(0,360,36):
+        x = math.cos(math.radians(i)) * circle1[2] + x0
+        y = math.sin(math.radians(i)) * circle1[2] + y0
+        if(x < maxX and y < maxY):
+            points.append([x,y])
 
-for i in range(0,360,36):
-    x = math.cos(math.radians(i)) * circle2[2] + x0
-    y = math.sin(math.radians(i)) * circle2[2] + y0
-    print (x,y)
-    if(x < maxX and y < maxY):
-        points.append([x,y])
+    for i in range(0,360,36):
+        x = math.cos(math.radians(i)) * circle2[2] + x0
+        y = math.sin(math.radians(i)) * circle2[2] + y0
+        if(x < maxX and y < maxY):
+            points.append([x,y])
 
-optimize()
+    #press 'q' to exit
+    if cv2.waitKey(0) == ord('q'):
+        cv2.destroyAllWindows()
 
-#press 'q' to exit
-if cv2.waitKey(0) == ord('q'):
-    cv2.destroyAllWindows()
+    return optimize()
 
+if(__name__ == "__main__"):
+    main(sys.argv)
 
       
 
