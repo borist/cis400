@@ -56,9 +56,6 @@ def buildPrefMatrix(edgeList, phi, M):
     for (edges, hypotheses) in prefMatrix:
         print "(%s, %s)" % (edges, hypotheses)
 
-
-
-
     return prefMatrix
 
 # determine D(v_m,edge)
@@ -132,9 +129,23 @@ def reduceClusters(clusterList):
 
     return edgelist, preferenceSets
 
+# Input: a list of edges. Output: vanishing point corresponding to these edges.
 def calculateVanishingPoint(cluster):
+    points = []
+    for i, e1 in enumerate(cluster):
+        for j, e2 in enumerate(cluster):
+            if i != j:
+                points.append(vanishingPoint(e1, e2))
 
-    return []
+    # find the centroid of these points
+    totalX = 0
+    totalY = 0
+    k = 0
+    for (x, y) in points:
+        totalX += x
+        totalY += y
+        k += 1
+    return (totalX / k, totalY / k)
 
 def main(argv=None):
     if argv == None:
