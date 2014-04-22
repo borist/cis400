@@ -21,15 +21,21 @@ import subprocess
 import sys
 #from matplotlib import pyplot as plt
 
+# edgeList - list of edges
+# phi - voting parameter (distance in pixels between endpoint of an edge and line between vanishing point and edge midpoint)
+# M - number of hypothesized vanishing points
+# Output: N x M matrix, where N = # of edges, and M = # of hypotheses
 def buildPrefMatrix(edgeList, phi, M):
     numEdges = len(edgeList)
 
+    # a list of tuples where each tuple is (edge, [set of hypothesis IDs that this edge votes for])
     prefMatrix = []
     for edge in edgeList:
         prefMatrix.append(([edge], set()))
 
+    random.seed(0)
     for i in range(M):
-        # sample 2 edges and determine the vanishing point hypothesis
+        # sample 2 edges and find their intersection, which forms one vanishing point hypothesis
         edgeSample = random.sample(xrange(numEdges), 2)
         vph = vanishingPoint(edgeList[edgeSample[0]], edgeList[edgeSample[1]])
 
@@ -48,14 +54,16 @@ def buildPrefMatrix(edgeList, phi, M):
         #if cv2.waitKey(0) == ord('x'):
             #break
 
-        #given the vanishing point hypothesis, determine if the particular edge
-        #votes for that hypothesis
+        # given the vanishing point hypothesis, determine if the particular edge
+        # votes for that hypothesis
         for (edges, hypotheses) in prefMatrix:
             if (calc_D_lt_phi(vph, edges[0], phi)):
                 hypotheses.add(i)
 
+    """
     for (edges, hypotheses) in prefMatrix:
         print "(%s, %s)" % (edges, hypotheses)
+    """
 
     return prefMatrix
 
@@ -70,6 +78,8 @@ def calc_D(vph, edge):
 
     #calculate parameters of line between centroid and vph
     if (xc - vpx != 0):
+        ml = (yc - vpy)/(xc - vpx)
+        bl = (ml * xc) + yc
         return math.fabs(x1 - (ml * y1) - bl)/math.sqrt(ml ** 2 + 1)
     else:
         return math.fabs(x1 - xc)
@@ -96,14 +106,13 @@ def reduceClusters(clusterList):
             distances[(i,j)] = -1
 
     edgelist, preferenceSets = zip(*clusterList)
-    outliers = []
 
     while True:
         minDistance = 2.0
         minPair = (-1, -1)
         for ii, i in enumerate(validIndices):
             for j in validIndices[ii+1:]:
-                #if not valid, update
+                # if not valid, update
                 if distances[(i,j)] < 0:
                     distances[(i,j)] = jaccardDistance(preferenceSets[i], preferenceSets[j])
 
@@ -116,7 +125,7 @@ def reduceClusters(clusterList):
         if minDistance >= 1.0:
             break
 
-        #update the distances
+        # update the distances
         print "merging %s with %s" % minPair
         edgelist[minPair[0]].extend(edgelist[minPair[1]])
         preferenceSets[minPair[0]].intersection_update(preferenceSets[minPair[1]])
@@ -154,8 +163,11 @@ def calculateManhattanDist(vps):
     v3 = vps[2][0]
 
     v1_p = null(np.matrix([v2, v3]))
+    v1_p = v1_p / np.linalg.norm(v1_p)
     v2_p = null(np.matrix([v1, v3]))
+    v2_p = v2_p / np.linalg.norm(v2_p)
     v3_p = null(np.matrix([v1, v2]))
+    v3_p = v3_p / np.linalg.norm(v3_p)
 
     v1Err = calculateConsistency(v1_p, vps[0][1])
     v2Err = calculateConsistency(v2_p, vps[1][1])
@@ -171,20 +183,19 @@ def main(argv=None):
     if argv == None:
         argv = sys.argv
 
+    # runs LSD via command line
     inputfile = argv[1]
     outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
     cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
-    lines = subprocess.check_output(cmd)
+    lines = subprocess.check_output(cmd).strip()
 
     edgeList = []
-    lines = lines.strip()
-
     for line in lines.split('\n'):
         edgeParams = line.split()
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > 30):
+        if (newEdge.length > 40):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
@@ -192,18 +203,20 @@ def main(argv=None):
     print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
 
-    reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 1]
+    reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 2]
     print "reduced to %s clusters" % len(reducedEdges)
 
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
-    vps = [(vanishingPoint(cluster), cluster) for cluster in reducedEdges]
+    vps = [(calculateVanishingPoint(cluster), cluster) for cluster in reducedEdges]
 
     # compute Manhattan distance
     minDist = sys.maxint
-    for (t1, t2, t3) in combinations(vps, 3):
-        dist = calculateManhattanDist(t1, t2, t3)
+    for t in combinations(vps, 3):
+        dist = calculateManhattanDist(t)
         if (dist < minDist):
-            triplet = (t1, t2, t3)
+            print "distance %d" % dist
+            minDist = dist
+            triplet = t
     print "final vanishing points"
     print triplet
 
@@ -223,12 +236,17 @@ def main(argv=None):
                  ]
 
     k = 0
-    for edgeCluster in reducedClusters[0]:
-        print edgeCluster
-        if len(edgeCluster) > 2:
-            for edge in edgeCluster:
-                cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10])
-            k += 1
+    for edgeCluster in reducedEdges:
+        for edge in edgeCluster:
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+        k += 1
+    """
+    k = 0
+    for (v, edges) in triplet:
+        for edge in edges:
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+        k += 1
+    """
 
 
     cv2.imshow('image', img)
