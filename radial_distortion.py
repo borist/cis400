@@ -41,7 +41,10 @@ def optimize():
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
     print result
-    return result.x 
+    if result.status == 0:
+        return result.x
+    else:
+        return None
 
 def hough_circles(img):
     maxY, maxX = img.shape[:2]
@@ -87,7 +90,7 @@ def transform(params, img):
             break
 
 def main(argv=None):
-    cv2.namedWindow('image')
+    #cv2.namedWindow('image')
     img = cv2.imread(argv[1])
     #cv2.imshow('image', img)
     result = hough_circles(img)
