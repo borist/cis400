@@ -70,21 +70,26 @@ function undistort_image(image_url) {
     xhr.onreadystatechange = function() {
         if (xhr.readyState == 4) {
             // JSON.parse does not evaluate the attacker's scripts.
-            var resp = jQuery.parseJSON(xhr.responseText);
-            var undist_url = resp.url;
-            console.log("undistorted url: ");
-            console.log(undist_url);
-            send_undistorted_image_to_popup(undist_url);
+            // var resp = jQuery.parseJSON(xhr.responseText);
+            // var undist_url = resp.url;
+            // console.log("undistorted url: ");
+            // console.log(undist_url);
+            // send_to_popup(undist_url);
+
+            // get score
+            var dist_score = xhr.responseText;
+            console.log(dist_score);
+            send_to_popup(dist_score);
       }
-    }
+    };
     xhr.send();
 }
 
 
-function send_undistorted_image_to_popup(undist_url) {
+function send_to_popup(message) {
     console.log("attempting to send undistorted url back to popup");
     // send message to popup.js with undistorted image url
-    chrome.runtime.sendMessage(undist_url, function() { /*response*/ });
+    chrome.runtime.sendMessage(message, function() { /*response*/ });
 }
 
 

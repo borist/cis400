@@ -1,13 +1,12 @@
 import sys
-import string
 import cv2
 
 def convert(inputfile, outputfile):
-    print outputfile
+    #print outputfile
     img = cv2.imread(inputfile, cv2.CV_LOAD_IMAGE_GRAYSCALE)
-    print "writing file %s " % outputfile
-    if (cv2.imwrite(outputfile, img)):
-        print "Success!"
+    #print "writing file %s " % outputfile
+    cv2.imwrite(outputfile, img)
+    #print "Success!"
 
 def main(argv=None):
     if argv == None:

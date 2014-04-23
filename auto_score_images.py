@@ -21,7 +21,7 @@ def compute_scores(image_path, comp_rad=True, comp_focal=True, comp_FOV=True):
 
     if comp_FOV:
         # computer FOV
-        img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
+        img = cv2.imread(image_path, cv2.IMREAD_COLOR)
         h, w = img.shape[:2]
         FOV = float(focal_length.compute_fov(w, h, f))
 
@@ -51,6 +51,7 @@ if __name__ == "__main__":
             for image in images:
                 print "running file ", image
                 scores = compute_scores(image, comp_rad, comp_focal, comp_FOV)
+                print "scores: ", scores
                 # write scores
                 writer.writerow([image] + scores)
 
@@ -58,6 +59,7 @@ if __name__ == "__main__":
         print "running file ", image_dir
 
         scores = compute_scores(image_dir, comp_rad, comp_focal, comp_FOV)
+        print "scores: ", scores
 
         # write to file
         with open(fname, 'wb') as f:

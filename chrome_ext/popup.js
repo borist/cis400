@@ -33,6 +33,36 @@ function display_undistorted_image(src) {
     $("#image_con").append(img);
 }
 
+function display_distortion_scores(score) {
+    $("#progress_wrapper").addClass("hide");
+    $("#table_wrapper").removeClass("hide");
+    // reset width of bar
+    var $bar = $("#progress_bar");
+    $bar.width(0);
+
+    // set overall score
+    $("#overall_score").empty();
+    $("#overall_score").text(score);
+}
+
+
+function wait_for_progress() {
+    $("#table_wrapper").addClass("hide");
+    $("#progress_wrapper").removeClass("hide");
+
+    // fake the progress bar
+     var progress = setInterval(function () {
+         var $bar = $('#progress_bar');
+
+         if ($bar.width() >= 500) {
+             clearInterval(progress);
+         } else {
+             $bar.width($bar.width() + 40); //change int to increase/decrease speed
+         }
+     }, 100);
+}
+
+
 function display_image_options(urls) {
     var len = urls.length;
     for (var i = 0; i < len; i++) {
@@ -94,7 +124,8 @@ function process_response(response) {
 
 function process_undistortion(response, sendResponse) {
     console.log(response);
-    display_undistorted_image(response);
+    // display_undistorted_image(response);
+    display_distortion_scores(response);
 }
 
 // send message to contentscript.js to find images
@@ -104,6 +135,7 @@ chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
 
 document.addEventListener('DOMContentLoaded', function() {
   $("#submit_image").click(function() {
+        wait_for_progress();
         // send message to contentscript.js to send image and get undistorted image
         chrome.tabs.query({active: true, currentWindow: true}, function(tabs) {
                 chrome.tabs.sendMessage(tabs[0].id, {text: main_image_url}, process_response);

@@ -15,17 +15,18 @@ def info():
 # TODO: change to query? ?q=
 @app.route('/post/<path:image_url>')
 def get_image(image_url):
-    return jsonify(url=image_url)
+    # return jsonify(url=image_url)
+    import time
+    time.sleep(5)
 
+    # radial | focal length | FOV | overall
+    radial_score = str(2)
+    focal_len_score = str(5)
+    FOV_score = str(7)
+    overall_score = str(.72)
 
-# might have to do the below instead, or at the very least
-# encode urls before passing them as parameters... or both
-
-# @app.route('/post', methods=['GET', 'POST'])
-# def get_image():
-#     if request.method == 'POST':
-#         # etc etc
-#         pass
+    scores = [radial_score, focal_len_score, FOV_score, overall_score]
+    return ' '.join(scores)
 
 
 @app.route('/hello/<thing>')

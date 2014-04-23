@@ -2,6 +2,26 @@
     width: 1300px;
 }
 
+.hide {
+    display:none;
+}
+
+#table_wrapper {
+
+}
+
+body {
+    margin:10px;
+}
+
+#submit_image {
+    margin-bottom: 10px;
+}
+
+#progress_wrapper {
+    width: 580px; /*600px max width - padding * 2*/
+}
+
 #image_tbc {
     float:left;
     width: 600px;
