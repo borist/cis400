@@ -103,8 +103,8 @@ def main(argv=None):
     minDist = float("inf")
     circle1 = None
     circle2 = None
-    
-    if circles is None
+
+    if circles is None:
         return 0
 
     for i in result[0,:]:
