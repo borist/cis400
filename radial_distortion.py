@@ -89,8 +89,13 @@ def transform(params, img):
             break
 
 def main(argv=None):
-    #cv2.namedWindow('image')
-    img = cv2.imread(argv[1])
+
+    if type(argv) == str:
+        img = cv2.imread(argv)
+    else:
+        #cv2.namedWindow('image')
+        img = cv2.imread(argv[1])
+
     #cv2.imshow('image', img)
     result = hough_circles(img)
 
@@ -124,9 +129,9 @@ def main(argv=None):
         if(x < maxX and y < maxY):
             points.append([x,y])
 
-    #press 'q' to exit
-    if cv2.waitKey(0) == ord('q'):
-        cv2.destroyAllWindows()
+    # #press 'q' to exit
+    # if cv2.waitKey(0) == ord('q'):
+    #     cv2.destroyAllWindows()
 
     return optimize()
 
