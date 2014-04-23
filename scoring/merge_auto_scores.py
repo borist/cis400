@@ -23,6 +23,6 @@ if __name__ == "__main__":
             with open(output_name, 'wb') as f_write:
                 writer = csv.writer(f_write)
 
-                for row1, row2 in rad_reader, foc_reader:
+                for (row1, row2) in zip(rad_reader, foc_reader):
                     merged = row1[:2] + row2[2:]
                     writer.writerow(merged)
