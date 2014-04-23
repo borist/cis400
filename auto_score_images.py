@@ -21,7 +21,7 @@ def compute_scores(image_path, comp_rad=True, comp_focal=True, comp_FOV=True):
 
     if comp_FOV:
         # computer FOV
-        img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
+        img = cv2.imread(image_path, cv2.IMREAD_COLOR)
         h, w = img.shape[:2]
         FOV = float(focal_length.compute_fov(w, h, f))
 
