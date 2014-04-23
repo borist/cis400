@@ -157,14 +157,10 @@ def calculateManhattanDist(vps):
 def calculateConsistency(v, edges):
     return np.mean([calc_D(v, edge) for edge in edges])
 
-def main(argv=None):
-    if argv == None:
-        argv = sys.argv
-
+def getOrthogonalVPs(imagePath):
     # runs LSD via command line
-    inputfile = argv[1]
     outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
-    cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
+    cmd = ['./lsd_1.6/lsd', imagePath, outputfile]
     lines = subprocess.check_output(cmd).strip()
 
     edgeList = []
@@ -187,6 +183,21 @@ def main(argv=None):
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
     vps = [(calculateVanishingPoint(cluster), cluster) for cluster in reducedEdges]
 
+    # compute Manhattan distance
+    maxDist = 0
+    for t in combinations(vps, 3):
+        dist = calculateManhattanDist(t)
+        if (dist > maxDist):
+            print "distance %f" % dist
+            maxDist = dist
+            triplet = t
+
+    print triplet
+    return triplet
+
+if __name__ == "__main__":
+    vps = getOrthogonalVPs(sys.argv[1])
+
     colorlist = [(255,0,0),
                  (0,255,0),
                  (0,0,255),
@@ -199,23 +210,11 @@ def main(argv=None):
                  (51,51,204),
                  ]
 
-    # compute Manhattan distance
-    maxDist = 0
-    for t in combinations(vps, 3):
-        dist = calculateManhattanDist(t)
-        if (dist > maxDist):
-            print "distance %f" % dist
-            maxDist = dist
-            triplet = t
-
-    print "final vanishing points"
-    print triplet
-
     # display final image
     cv2.namedWindow('image')
-    img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
+    img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
     k = 0
-    for (v, edges) in triplet:
+    for (v, edges) in vps:
         for edge in edges:
             cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
         k += 1
@@ -224,6 +223,3 @@ def main(argv=None):
     # press 'q' to exit
     if cv2.waitKey(0) == ord('q'):
         cv2.destroyAllWindows()
-
-if __name__ == "__main__":
-    main(sys.argv)
