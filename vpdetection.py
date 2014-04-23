@@ -116,12 +116,12 @@ def reduceClusters(clusterList):
                     minPair = i,j
                     minDistance = distances[(i,j)]
 
-        print "minDistance found: %s" % minDistance
+        #print "minDistance found: %s" % minDistance
         if minDistance >= 1.0:
             break
 
         # update the distances
-        print "merging %s with %s" % minPair
+        #print "merging %s with %s" % minPair
         edgelist[minPair[0]].extend(edgelist[minPair[1]])
         preferenceSets[minPair[0]].intersection_update(preferenceSets[minPair[1]])
         validIndices.remove(minPair[1])
@@ -163,13 +163,20 @@ def reduceClustersMore(clusters):
     #magic number threshhold for deciding if 2 vanishing points are close enough together
     mn = .1
     startinglen = len(clusters)
+    result = []
+    for i, (vp1, edges1) in enumerate(clusters):
+        merged = False
+        for (vp2, edges2) in clusters[i+1:]:
+            if (math.sqrt((vp1[0] - vp2[0]) ** 2 + (vp1[1] - vp2[1]) ** 2) < math.sqrt(vp1[0] ** 2 + vp1[1] ** 2) * mn):
+                #print "%s similar to %s" % (vp1, vp2)
+                merged = True
+                result.append((calculateVanishingPoint(edges1 + edges2), edges1 + edges2))
+                clusters.remove((vp2, edges2))
+                break
+        if not merged:
+            result.append((vp1, edges1))
 
-    result = [(calculateVanishingPoint(edges1 + edges2), edges1 + edges2) for (vp1, edges1)
-              in clusters
-                for (vp2, edges2)
-                in clusters[(clusters.index((vp1, edges1)) + 1):]
-              if math.sqrt((vp1[0] - vp2[0]) ** 2 + (vp1[1] - vp2[1]) ** 2) < math.sqrt(vp1[0] ** 2 + vp1[1] ** 2) * mn]
-    print len(result)
+    #print len(result)
     return result
 
 
@@ -193,23 +200,27 @@ def getOrthogonalVPs(imagePath):
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > .03 * (width ** 2 + height ** 2) ** .5):
+        if (newEdge.length > .02 * (width ** 2 + height ** 2) ** .5):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
 
-    print "starting clusters: %s" % len(edgeList)
+    #print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
 
     reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 3]
-    print "reduced to %s clusters" % len(reducedEdges)
+    #print "reduced to %s clusters" % len(reducedEdges)
 
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
     vps = [(calculateVanishingPoint(cluster), cluster) for cluster in reducedEdges]
-    if len(vps) > 70:
+
+    lastiter = 0
+    while len(vps) > 50 and (len(vps) != lastiter):
+        lastiter = len(vps)
         vps = reduceClustersMore(vps)
 
-    print "reduced further to %s clusters" % len(vps)
+
+    #print "reduced further to %s clusters" % len(vps)
 
 
     # compute Manhattan distance
@@ -217,11 +228,11 @@ def getOrthogonalVPs(imagePath):
     for t in combinations(vps, 3):
         dist = calculateManhattanDist(t)
         if (dist > maxDist):
-            print "distance %f" % dist
+            #print "distance %f" % dist
             maxDist = dist
             triplet = t
 
-    print triplet
+    #print triplet
     return triplet
 
 if __name__ == "__main__":
