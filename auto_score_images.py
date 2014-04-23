@@ -51,6 +51,7 @@ if __name__ == "__main__":
             for image in images:
                 print "running file ", image
                 scores = compute_scores(image, comp_rad, comp_focal, comp_FOV)
+                print "scores: ", scores
                 # write scores
                 writer.writerow([image] + scores)
 
@@ -58,6 +59,7 @@ if __name__ == "__main__":
         print "running file ", image_dir
 
         scores = compute_scores(image_dir, comp_rad, comp_focal, comp_FOV)
+        print "scores: ", scores
 
         # write to file
         with open(fname, 'wb') as f:

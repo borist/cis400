@@ -53,8 +53,8 @@ def hough_circles(img):
     cimg = cv2.cvtColor(imgMod,cv2.COLOR_BGR2GRAY)
     x = 65
     circles = []
-    while(((circles is None) or len(circles) == 0 or len(circles[0]) < 2) and x > 30):
-        x = x-0.5
+    while(((circles is None) or len(circles) == 0 or len(circles[0]) < 2) and x > 40):
+        x = x-.5
         circles = cv2.HoughCircles(cimg,cv.CV_HOUGH_GRADIENT,1,.0001,param1=100,param2=x,minRadius=minR,maxRadius=maxR)
 
     #for i in circles[0,:]:
@@ -124,13 +124,13 @@ def main(argv=None):
     for i in range(0,360,36):
         x = math.cos(math.radians(i)) * circle1[2] + x0
         y = math.sin(math.radians(i)) * circle1[2] + y0
-        if(x < maxX and y < maxY):
+        if(x > 0 and y > 0 and x < maxX and y < maxY):
             points.append([x,y])
 
     for i in range(0,360,36):
         x = math.cos(math.radians(i)) * circle2[2] + x0
         y = math.sin(math.radians(i)) * circle2[2] + y0
-        if(x < maxX and y < maxY):
+        if(x > 0 and y > 0 and x < maxX and y < maxY):
             points.append([x,y])
 
     # #press 'q' to exit
