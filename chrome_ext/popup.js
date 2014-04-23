@@ -40,9 +40,21 @@ function display_distortion_scores(score) {
     var $bar = $("#progress_bar");
     $bar.width(0);
 
+    var scores = score.split(" ");
+    console.log(scores);
+
+    $("#radial_score").empty();
+    $("#radial_score").text(scores[0]);
+
+    $("#focal_score").empty();
+    $("#focal_score").text(scores[1]);
+
+    $("#fov_score").empty();
+    $("#fov_score").text(scores[2]);
+
     // set overall score
     $("#overall_score").empty();
-    $("#overall_score").text(score);
+    $("#overall_score").text(scores[3]);
 }
 
 
@@ -57,7 +69,7 @@ function wait_for_progress() {
          if ($bar.width() >= 500) {
              clearInterval(progress);
          } else {
-             $bar.width($bar.width() + 40); //change int to increase/decrease speed
+             $bar.width($bar.width() + 10); //change int to increase/decrease speed
          }
      }, 100);
 }

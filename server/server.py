@@ -1,9 +1,30 @@
 from flask import Flask
 from flask import request
 from flask import jsonify
+import cv2
 import urllib
+import focal_length
+import radial_distortion
+
 
 app = Flask(__name__)
+weights = [22302.0896768, -1.12908388976e-19, 1.13605974542]
+
+
+def calculate_distortion_score(image_url):
+    rad = float(radial_distortion.main(image_url))
+
+    (v0, o, h) = focal_length.compute_pp(image_url)
+    f = float(focal_length.compute_focal_length(v0, o, h))
+
+    # computer FOV
+    img = cv2.imread(image_url, cv2.IMREAD_COLOR)
+    h, w = img.shape[:2]
+    FOV = float(focal_length.compute_fov(w, h, f))
+
+    dist_score = weights[0] * rad + weights[1] * f + weights[2] * FOV
+
+    return [rad, f, FOV, dist_score]
 
 
 @app.route('/')
@@ -16,16 +37,19 @@ def info():
 @app.route('/post/<path:image_url>')
 def get_image(image_url):
     # return jsonify(url=image_url)
-    import time
-    time.sleep(5)
+
+    temp_fname = 'temp.jpg'
+
+    with open(temp_fname,'wb') as f:
+        f.write(urllib.urlopen(image_url).read())
 
     # radial | focal length | FOV | overall
-    radial_score = str(2)
-    focal_len_score = str(5)
-    FOV_score = str(7)
-    overall_score = str(.72)
+    scores = calculate_distortion_score(temp_fname)
 
-    scores = [radial_score, focal_len_score, FOV_score, overall_score]
+
+
+
+    scores = [str(score) for score in scores]
     return ' '.join(scores)
 
 
@@ -38,5 +62,5 @@ def hello_thing(thing):
 
 
 if __name__ == '__main__':
-    debug_app = False
+    debug_app = True
     app.run(debug=debug_app)

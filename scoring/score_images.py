@@ -29,6 +29,9 @@ class Scored_Image():
 # global vars
 num_headers = 2  # number of header lines in the csv with manual scores
 curr_images = None
+max_auto_rad = 0.0
+max_auto_focal = 0.0
+max_auto_fov = 0.0
 
 
 def process_scored_images(manual_csv_file, auto_csv_file):
@@ -92,13 +95,16 @@ def least_sq_distance(weight):
         auto_score = weigh_auto_distortion(image, weight)
 
         sq_dist = (manual_score - auto_score) ** 2
-        print manual_score, auto_score, sq_dist
 
         total_distance += sq_dist
     return total_distance
 
 
 def normalize_images(images):
+    global max_auto_rad
+    global max_auto_focal
+    global max_auto_fov
+
     max_auto_rad = float(0)
     max_auto_focal = float(0)
     max_auto_fov = float(0)
@@ -124,8 +130,11 @@ def try_weights(images):
     curr_images = images
 
     # next 3 are for automatic: radial distortion | focal length | FOV | angle of camera (only for manual)
-    initial_weights = np.array([.1, .1, .1, .1])
-    res = minimize(least_sq_distance, initial_weights)
+    initial_weights = np.array([.25, .25, .25, .25])
+
+    cons = ({'type': 'eq', 'fun': lambda x: sum(x) - 1})
+
+    res = minimize(least_sq_distance, initial_weights, method='SLSQP', constraints=cons)
     print res
     return res.x
 
@@ -156,3 +165,9 @@ if __name__ == "__main__":
         print "\t radial: ", optimal_weights[0]
         print "\t focal length: ", optimal_weights[1]
         print "\t FOV: ", optimal_weights[2]
+        print optimal_weights[0] +  optimal_weights[1] +  optimal_weights[2] +  optimal_weights[3]
+
+        print "Normalization Factors: "
+        print "\t radial: ", optimal_weights[0] * 10.0 / max_auto_rad
+        print "\t focal length: ", optimal_weights[1] * 10.0 / max_auto_focal
+        print "\t FOV: ", optimal_weights[2] * 10.0 / max_auto_fov
