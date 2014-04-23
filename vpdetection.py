@@ -158,6 +158,21 @@ def calculateManhattanDist(vps):
 def calculateConsistency(v, edges):
     return np.mean([calc_D(v, edge) for edge in edges])
 
+#given list of clusters with their vanishing points, reduce them until less than 50 exist
+def reduceClustersMore(clusters):
+    #magic number threshhold for deciding if 2 vanishing points are close enough together
+    mn = .1
+    startinglen = len(clusters)
+
+    result = [(calculateVanishingPoint(edges1 + edges2), edges1 + edges2) for (vp1, edges1)
+              in clusters
+                for (vp2, edges2)
+                in clusters[(clusters.index((vp1, edges1)) + 1):]
+              if math.sqrt((vp1[0] - vp2[0]) ** 2 + (vp1[1] - vp2[1]) ** 2) < math.sqrt(vp1[0] ** 2 + vp1[1] ** 2) * mn]
+    print len(result)
+    return result
+
+
 def getOrthogonalVPs(imagePath):
 
     convert(imagePath, "temp.pgm")
@@ -169,13 +184,16 @@ def getOrthogonalVPs(imagePath):
     cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
     lines = subprocess.check_output(cmd).strip()
 
+    img = cv2.imread(imagePath, cv2.IMREAD_COLOR)
+    width, height = img.shape[:2]
+
     edgeList = []
     for line in lines.split('\n'):
         edgeParams = line.split()
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > 40):
+        if (newEdge.length > .03 * (width ** 2 + height ** 2) ** .5):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
@@ -188,6 +206,11 @@ def getOrthogonalVPs(imagePath):
 
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
     vps = [(calculateVanishingPoint(cluster), cluster) for cluster in reducedEdges]
+    if len(vps) > 70:
+        vps = reduceClustersMore(vps)
+
+    print "reduced further to %s clusters" % len(vps)
+
 
     # compute Manhattan distance
     maxDist = 0
@@ -218,12 +241,16 @@ if __name__ == "__main__":
 
     # display final image
     cv2.namedWindow('image')
-    img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
+    img = cv2.imread("temp.pgm", cv2.IMREAD_COLOR)
     k = 0
     for (v, edges) in vps:
         for edge in edges:
-            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 10) # thickness 2
         k += 1
+
+    width, height = img.shape[:2]
+    if (height > 720):
+        img = cv2.resize(img, (0,0), fx=720/height, fy=720/height)
 
     cv2.imshow('image', img)
     # press 'q' to exit
