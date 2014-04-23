@@ -40,11 +40,10 @@ def optimize():
     cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1},
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
-    print result
     if result.status == 0:
-        return result.x
+        return result.x[0]
     else:
-        return None
+        return 0
 
 def hough_circles(img):
     maxY, maxX = img.shape[:2]
