@@ -41,7 +41,6 @@ def optimize():
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)
     if result.status == 0:
-        print result.x[0]
         return result.x[0]
     else:
         return 0
