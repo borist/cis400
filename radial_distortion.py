@@ -41,6 +41,7 @@ def optimize():
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
     result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)
     if result.status == 0:
+        print result.x[0]
         return result.x[0]
     else:
         return 0
@@ -53,8 +54,8 @@ def hough_circles(img):
     cimg = cv2.cvtColor(imgMod,cv2.COLOR_BGR2GRAY)
     x = 65
     circles = []
-    while(((circles is None) or len(circles) == 0 or len(circles[0]) < 2) and x > 40):
-        x = x-.5
+    while(((circles is None) or len(circles) == 0 or len(circles[0]) < 2) and x > 35):
+        x = x-1
         circles = cv2.HoughCircles(cimg,cv.CV_HOUGH_GRADIENT,1,.0001,param1=100,param2=x,minRadius=minR,maxRadius=maxR)
 
     #for i in circles[0,:]:
