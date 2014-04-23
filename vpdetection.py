@@ -64,7 +64,7 @@ def buildPrefMatrix(edgeList, phi, M):
 def calc_D(vph, edge):
     x1, y1 = edge.ep1
     x2, y2 = edge.ep2
-    vpx, vpy = vph
+    vpx, vpy = vph[:2]
 
     #find the centroid of the edge
     xc = (x1 + x2)/2
@@ -146,11 +146,12 @@ def null(A, eps=1e-3):
     return null_space.T
 
 # Input: takes in a list of 3 tuples, each representing a vanishing point. Each tuple is in the form ((x, y), [Edge])
-def calculateManhattanDist(vps):
-    v1 = vps[0][0]
-    v2 = vps[1][0]
-    v3 = vps[2][0]
+def calculateManhattanDist(vps, w, h):
+    v1 = tuple(np.subtract(vps[0][0], (w/2, h/2)))
+    v2 = tuple(np.subtract(vps[1][0], (w/2, h/2)))
+    v3 = tuple(np.subtract(vps[2][0], (w/2, h/2)))
 
+    """
     v1_p = null(np.matrix([v2, v3]))
     v1_p = v1_p / np.linalg.norm(v1_p)
     v2_p = null(np.matrix([v1, v3]))
@@ -158,15 +159,28 @@ def calculateManhattanDist(vps):
     v3_p = null(np.matrix([v1, v2]))
     v3_p = v3_p / np.linalg.norm(v3_p)
 
-    v1Err = calculateConsistency(v1_p, vps[0][1])
-    v2Err = calculateConsistency(v2_p, vps[1][1])
-    v3Err = calculateConsistency(v3_p, vps[2][1])
+    v1_p = null(np.matrix([v2 + (1,), v3 + (1,)]))
+    print "v2, v3, v1_p"
+    print v2
+    print v3
+    print v1_p
+    v1_p = v1_p / np.linalg.norm(v1_p)
+    print v1_p
+    v2_p = null(np.matrix([v1 + (1,), v3 + (1,)]))
+    v2_p = v2_p / np.linalg.norm(v2_p)
+    v3_p = null(np.matrix([v1 + (1,), v2 + (1,)]))
+    v3_p = v3_p / np.linalg.norm(v3_p)
+    """
 
-    return max(v1Err, v2Err, v3Err)
+    v1Err = calculateConsistency(v1, vps[0][1])
+    v2Err = calculateConsistency(v2, vps[1][1])
+    v3Err = calculateConsistency(v3, vps[2][1])
+
+    return np.mean([v1Err, v2Err, v3Err])
 
 # Helper function to calculateManhattanDist
 def calculateConsistency(v, edges):
-    return np.mean([calc_D(v, edge) for edge in edges])
+    return np.mean([calc_D(v, edge) for edge in edges]) / (len(edges) ** .5)
 
 def main(argv=None):
     if argv == None:
@@ -210,15 +224,20 @@ def main(argv=None):
                  (51,51,204),
                  ]
 
+    cv2.namedWindow('image')
+    img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
+
+    w, h = img.shape[:2]
+
     # compute Manhattan distance
     minDist = sys.float_info.max
     for t in combinations(vps, 3):
-        dist = calculateManhattanDist(t)
+        dist = calculateManhattanDist(t, w, h)
+        # if (dist < minDist and dist > 2):
         if (dist < minDist):
             print "distance %f" % dist
             minDist = dist
             triplet = t
-            print triplet
 
             cv2.namedWindow('image')
             img = cv2.imread(inputfile, cv2.IMREAD_COLOR)
@@ -234,9 +253,22 @@ def main(argv=None):
             if cv2.waitKey(0) == ord('q'):
                 cv2.destroyAllWindows()
 
-    #print "final vanishing points"
+    print "final vanishing points"
+    print triplet
+
+
+    k = 0
+    for (v, edges) in triplet:
+        for edge in edges:
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
+        k += 1
 
     """
+    cv2.imshow('image', img)
+    #press 'q' to exit
+    if cv2.waitKey(0) == ord('q'):
+        cv2.destroyAllWindows()
+
     k = 0
     for edgeCluster in reducedEdges:
         for edge in edgeCluster:
