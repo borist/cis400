@@ -104,7 +104,7 @@ def main(argv=None):
     circle1 = None
     circle2 = None
 
-    if result is None:
+    if (result is None or len(result[0]) < 2):
         return 0
 
     for i in result[0,:]:
