@@ -61,7 +61,7 @@ function dedupe(urls) {
 
 
 function undistort_image(image_url) {
-    var post_url = "https://scoring-distortion.herokuapp.com/post/";
+    //var post_url = "https://scoring-distortion.herokuapp.com/post/";
     var post_url = "http://127.0.0.1:5000/post/";
     //var image_url = encodeURIComponent(image_url)
     var encoded_post_url = post_url + image_url;

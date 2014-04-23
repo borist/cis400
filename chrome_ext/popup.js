@@ -44,17 +44,20 @@ function display_distortion_scores(score) {
     console.log(scores);
 
     $("#radial_score").empty();
-    $("#radial_score").text(scores[0]);
+    $("#radial_score").text(parseFloat(scores[0]).toFixed(3));
 
     $("#focal_score").empty();
-    $("#focal_score").text(scores[1]);
+    $("#focal_score").text(parseFloat(scores[1]).toFixed(3));
 
     $("#fov_score").empty();
-    $("#fov_score").text(scores[2]);
+    $("#fov_score").text(parseFloat(scores[2]).toFixed(3));
 
     // set overall score
     $("#overall_score").empty();
-    $("#overall_score").text(scores[3]);
+    $("#overall_score").text(parseFloat(scores[3]).toFixed(3));
+
+    var image_url = "http://127.0.0.1:5000/get_image";
+    display_main_image(image_url);
 }
 
 

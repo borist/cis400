@@ -251,7 +251,7 @@ def getOrthogonalVPs(imagePath):
     k = 0
     for (v, edges) in triplet:
         for edge in edges:
-            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 10) # thickness 2
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
         k += 1
     cv2.imwrite("vp_out/" + ntpath.basename(imagePath), img)
 
@@ -266,7 +266,7 @@ if __name__ == "__main__":
     k = 0
     for (v, edges) in vps:
         for edge in edges:
-            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 10) # thickness 2
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
         k += 1
 
     width, height = img.shape[:2]

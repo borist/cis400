@@ -1,13 +1,13 @@
+import flask
 from flask import Flask
 from flask import request
-from flask import jsonify
 import cv2
 import urllib
 import focal_length
 import radial_distortion
 
 
-app = Flask(__name__)
+app = Flask(__name__, static_url_path='')
 weights = [22302.0896768, -1.12908388976e-19, 1.13605974542]
 
 
@@ -33,6 +33,15 @@ def info():
     <h3>Tanay Mehta, Boris Treskunov, Grace Wang, Joseph Zhong</h3>"
 
 
+@app.route('/get_image')
+def get_edges_image():
+    path = './vp_out/temp.jpg'
+    resp = flask.make_response(open(path).read())
+    resp.content_type = "image/jpeg"
+    return resp
+
+
+
 # TODO: change to query? ?q=
 @app.route('/post/<path:image_url>')
 def get_image(image_url):
@@ -45,9 +54,6 @@ def get_image(image_url):
 
     # radial | focal length | FOV | overall
     scores = calculate_distortion_score(temp_fname)
-
-
-
 
     scores = [str(score) for score in scores]
     return ' '.join(scores)
