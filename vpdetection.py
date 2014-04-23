@@ -15,11 +15,26 @@ import cv2
 from edge import Edge, vanishingPoint
 from itertools import combinations
 import math
+import ntpath
 import numpy as np
+import os
 import random
 import subprocess
 import sys
 from colorToPgm import convert
+
+colorlist = [(255,0,0),
+                (0,255,0),
+                (0,0,255),
+                (255,255,255),
+                (255,0,255),
+                (255,255,0),
+                (0,255,255),
+                (255,153,0),
+                (255,255,102),
+                (51,51,204),
+                ]
+
 
 # edgeList - list of edges
 # phi - voting parameter (distance in pixels between endpoint of an edge and line between vanishing point and edge midpoint)
@@ -162,7 +177,6 @@ def calculateConsistency(v, edges):
 def reduceClustersMore(clusters):
     #magic number threshhold for deciding if 2 vanishing points are close enough together
     mn = .1
-    startinglen = len(clusters)
     result = []
     for i, (vp1, edges1) in enumerate(clusters):
         merged = False
@@ -200,7 +214,7 @@ def getOrthogonalVPs(imagePath):
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > .02 * (width ** 2 + height ** 2) ** .5):
+        if (newEdge.length > .03 * (width ** 2 + height ** 2) ** .5):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
@@ -232,23 +246,19 @@ def getOrthogonalVPs(imagePath):
             maxDist = dist
             triplet = t
 
-    #print triplet
+    # save image with lines to disk
+    img = cv2.imread("temp.pgm", cv2.IMREAD_COLOR)
+    k = 0
+    for (v, edges) in triplet:
+        for edge in edges:
+            cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 10) # thickness 2
+        k += 1
+    cv2.imwrite("vp_out/" + ntpath.basename(imagePath), img)
+
     return triplet
 
 if __name__ == "__main__":
     vps = getOrthogonalVPs(sys.argv[1])
-
-    colorlist = [(255,0,0),
-                 (0,255,0),
-                 (0,0,255),
-                 (255,255,255),
-                 (255,0,255),
-                 (255,255,0),
-                 (0,255,255),
-                 (255,153,0),
-                 (255,255,102),
-                 (51,51,204),
-                 ]
 
     # display final image
     cv2.namedWindow('image')

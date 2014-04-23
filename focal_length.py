@@ -13,7 +13,7 @@ def compute_focal_length(v, o, h):
     r = np.linalg.norm(v - h) / 2    # radius
     c = np.linalg.norm(v - o) / 2
     f = (2 * r * c  - c ** 2) ** .5
-    print "Focal length: %d" % f
+    print "Focal length: {}".format(f)
     return f
 
 # Takes in the width and height of the image, as well as the computed focal
@@ -69,16 +69,8 @@ def compute_intersect(a1, a2, b1, b2):
     return (num / denom) * b + b1
 
 if __name__ == "__main__":
-    cv2.namedWindow('image')
-    img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
-    cv2.imshow('image', img)
-
     (v0, o, h) = compute_pp(sys.argv[1])
     f = compute_focal_length(v0, o, h)
+    img = cv2.imread(sys.argv[1], cv2.IMREAD_COLOR)
     h, w = img.shape[:2]
     compute_fov(w, h, f)
-
-    #press 'q' to exit
-    if cv2.waitKey(0) == ord('q'):
-        cv2.destroyAllWindows()
-
