@@ -201,7 +201,7 @@ def getOrthogonalVPs(imagePath):
     print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
 
-    reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 2]
+    reducedEdges = [cluster for cluster in reducedClusters[0] if len(cluster) > 3]
     print "reduced to %s clusters" % len(reducedEdges)
 
     # preserve pairing of vanishing points with edge clusters for Manhattan distance calculation
