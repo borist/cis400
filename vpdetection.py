@@ -19,6 +19,7 @@ import numpy as np
 import random
 import subprocess
 import sys
+from colorToPgm import convert
 
 # edgeList - list of edges
 # phi - voting parameter (distance in pixels between endpoint of an edge and line between vanishing point and edge midpoint)
@@ -161,8 +162,9 @@ def main(argv=None):
     if argv == None:
         argv = sys.argv
 
+    convert(argv[1], "temp.pgm")
     # runs LSD via command line
-    inputfile = argv[1]
+    inputfile = "temp.pgm"
     outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
     cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
     lines = subprocess.check_output(cmd).strip()

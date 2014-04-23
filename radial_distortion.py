@@ -25,7 +25,7 @@ def objective_function(x):
         xd = points[i][0]
         yd = points[i][1]
         r2 = math.pow(xd-x0,2) + math.pow(yd-y0,2)
-        denom = 1 + a1 * r2 
+        denom = 1 + a1 * r2
         xu = (xd-x0)
         yu = (yd-y0)
         if i < 10:
@@ -35,11 +35,11 @@ def objective_function(x):
     return obj
 
 def optimize():
-    x0 = np.array([.1,.70,.70,0,.70,.70,0]) 
+    x0 = np.array([.1,.70,.70,0,.70,.70,0])
     b = [[-.1,.1], [-1,1], [-1,1], [-1000,1000], [-1,1], [-1,1], [-1000,1000]]
     cons = ({'type': 'eq', 'fun': lambda x: math.pow(x[1],2) + math.pow(x[2],2) - 1},
             {'type': 'eq', 'fun': lambda x: math.pow(x[4],2) + math.pow(x[5],2) - 1})
-    result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)  
+    result = opt.minimize(objective_function, x0, method = 'SLSQP', bounds = b, constraints = cons)
     if result.status == 0:
         return result.x[0]
     else:
@@ -133,6 +133,6 @@ def main(argv=None):
 if(__name__ == "__main__"):
     main(sys.argv)
 
-      
+
 
 
