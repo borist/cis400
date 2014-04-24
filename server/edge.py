@@ -39,7 +39,19 @@ def vanishingPoint(edge1, edge2):
     a_perp = perp(a)
     denom = np.dot(a_perp, b)
     if denom == 0:
-        return (sys.maxint, sys.maxint)
+        #return appropriate infinite vanishing point
+        if (edge1.ep1[0] == edge1.ep2[0]):
+            #in this case, the two edges are perfectly vertical
+            #the appropriate infinite vanishing point is between the lines and at infinity in the y dimension
+            return ((edge1.ep1[0] + edge2.ep1[0])/2, sys.maxint)
+        elif (edge1.ep1[1] == edge1.ep2[1]):
+            #in this case, the two edges are perfectly horizontal
+            #the appropriate infinite vanishing point is between the lines and at infinity in the x dimension
+            return (sys.maxint, (edge1.ep1[1] + edge2.ep1[1])/2)
+        else:
+            #should never happen but if the lines are parallel in any other way, the infinite vanishing point is just infinity,infinity
+            #does not take into account which direction the two edges are going
+            return (sys.maxint, sys.maxint)
     num = np.dot(a_perp, a1 - b1)
     result = (num / denom) * b + b1
     return (int(result[0]), int(result[1]))
