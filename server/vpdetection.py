@@ -214,7 +214,7 @@ def getOrthogonalVPs(imagePath):
         e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
         e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
         newEdge = Edge(e1, e2)
-        if (newEdge.length > .03 * (width ** 2 + height ** 2) ** .5):
+        if (newEdge.length > .02 * (width ** 2 + height ** 2) ** .5):
             edgeList.append(newEdge)
 
     prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
