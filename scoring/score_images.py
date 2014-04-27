@@ -27,7 +27,7 @@ class Scored_Image():
 
 
 # global vars
-num_headers = 2  # number of header lines in the csv with manual scores
+num_headers = 1  # number of header lines in the csv with manual scores
 curr_images = None
 max_auto_rad = 0.0
 max_auto_focal = 0.0
@@ -46,11 +46,12 @@ def process_scored_images(manual_csv_file, auto_csv_file):
             auto_reader = csv.reader(auto_f)
             images = []
 
-            # for i, row in enumerate(manual_reader):
-            #     if i < num_headers:
-            #         continue
-
+            i = 0
             for row1, row2 in zip(manual_reader, auto_reader):
+                if i < num_headers:
+                    i += 1
+                    continue
+
                 if row1[0].lower() != row2[0].split('\\')[-1].lower():
                     print "names don't align! ", row1[0], row2[0].split('\\')[-1]
                     return

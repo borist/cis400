@@ -1,4 +1,4 @@
-"name", "radial_score", "focal_len_score", "fov_score"
+name,a_radial_score,a_focal_len_score,a_fov_score
 .\images\test\0_10mm.JPG,0,18586473527.087444,2.762387931620318e-07
 .\images\test\0_20mm.JPG,0,2.908072514993135e+17,1.7655354155681505e-14
 .\images\test\0_30mm.JPG,0.000181501,49073009905.94436,1.0462584272090435e-07
