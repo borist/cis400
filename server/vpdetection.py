@@ -257,8 +257,42 @@ def getOrthogonalVPs(imagePath):
 
     return triplet
 
+def getManualOrthogonalVPs(imagePath):
+    convert(imagePath, "temp.pgm")
+    # runs LSD via command line
+    inputfile = "temp.pgm"
+
+    # runs LSD via command line
+    outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
+    cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
+    lines = subprocess.check_output(cmd).strip()
+
+    edgeList = []
+    for line in lines.split('\n'):
+        edgeParams = line.split()
+        e1 = (int(round(float(edgeParams[0]))), int(round(float(edgeParams[1]))))
+        e2 = (int(round(float(edgeParams[2]))), int(round(float(edgeParams[3]))))
+        newEdge = Edge(e1, e2)
+        if (newEdge.length > .02 * (width ** 2 + height ** 2) ** .5):
+            edgeList.append(newEdge)
+
+    prefMatrix = buildPrefMatrix(edgeList, 2, 1000)
+
+    #print "starting clusters: %s" % len(edgeList)
+    reducedClusters = reduceClusters(prefMatrix)
+
 if __name__ == "__main__":
-    vps = getOrthogonalVPs(sys.argv[1])
+    manualMode = False
+
+    imagePath = sys.argv[1]
+    if (sys.argv[1] == "-m"):
+        manualMode = True
+        imagePath = sys.argv[2]
+
+    if (manualMode == True):
+        vps = getManualOrthogonalVPs(imagePath)
+    else:
+        vps = getOrthogonalVPs(imagePath)
 
     # display final image
     cv2.namedWindow('image')
