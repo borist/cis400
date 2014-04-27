@@ -18,8 +18,8 @@ def run_regression(csv_url):
     data = pd.read_csv(csv_url)
     print data
 
-    x_cols = data.columns[2:]
-    #x_cols = data.columns[2:4]
+    x_cols = data.columns[2:]  # including FOV
+    #x_cols = data.columns[2:4]  # excluding FOV
 
     # run the regression
     mn_logit = sm.MNLogit(data['overall_score'], data[x_cols])
