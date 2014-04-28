@@ -206,7 +206,7 @@ def getOrthogonalVPs(imagePath):
     lines = subprocess.check_output(cmd).strip()
 
     img = cv2.imread(imagePath, cv2.IMREAD_COLOR)
-    width, height = img.shape[:2]
+    height, width = img.shape[:2]
 
     edgeList = []
     for line in lines.split('\n'):
@@ -257,6 +257,15 @@ def getOrthogonalVPs(imagePath):
 
     return triplet
 
+def relativeEdge(edge, width, height):
+    x1, y1 = edge.ep1
+    x2, y2 = edge.ep2
+
+    e1 = (x1/width, y1/height)
+    e2 = (x1/width, y1/height)
+    return Edge(e1, e2)
+
+
 def getManualOrthogonalVPs(imagePath):
     convert(imagePath, "temp.pgm")
     # runs LSD via command line
@@ -266,6 +275,9 @@ def getManualOrthogonalVPs(imagePath):
     outputfile = "/dev/stdout" # dump lsd output to stdout for python to read
     cmd = ['./lsd_1.6/lsd', inputfile, outputfile]
     lines = subprocess.check_output(cmd).strip()
+
+    img = cv2.imread(imagePath, cv2.IMREAD_COLOR)
+    height, width = img.shape[:2]
 
     edgeList = []
     for line in lines.split('\n'):
@@ -280,6 +292,10 @@ def getManualOrthogonalVPs(imagePath):
 
     #print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
+
+    relativeClusters = [[relativeEdge(e, width, height) for e in cluster]
+                         for cluster in reducedClusters[0]]
+
 
 if __name__ == "__main__":
     manualMode = False
@@ -303,7 +319,7 @@ if __name__ == "__main__":
             cv2.line(img, edge.ep1, edge.ep2, colorlist[k % 10], 2) # thickness 2
         k += 1
 
-    width, height = img.shape[:2]
+    height, width = img.shape[:2]
     if (height > 720):
         img = cv2.resize(img, (0,0), fx=720/height, fy=720/height)
 
