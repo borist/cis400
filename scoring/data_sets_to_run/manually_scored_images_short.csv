@@ -1,4 +1,4 @@
-"name", "radial_score", "focal_len_score", "fov_score", "camera_angle_score", "overall_score"
+name, radial_score, focal_len_score, fov_score, camera_angle_score, overall_score
 0_10mm.JPG,1,9,4,0,14
 0_20mm.JPG,0,4,0,0,4
 0_30mm.JPG,0,4,0,0,4

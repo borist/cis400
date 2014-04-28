@@ -18,7 +18,7 @@ if __name__ == "__main__":
     else:
         output_name = sys.argv[3]
 
-    with open(sys.argv[1], 'rb') as f_rad:
+    with open(sys.argv[1], 'rU') as f_rad:
         rad_reader = csv.reader(f_rad)
 
         with open(sys.argv[2], 'rb') as f_foc:
@@ -28,5 +28,5 @@ if __name__ == "__main__":
                 writer = csv.writer(f_write)
 
                 for (row1, row2) in zip(rad_reader, foc_reader):
-                    merged = row1[:2] + row2[2:]
+                    merged = row1[:] + row2[1:]
                     writer.writerow(merged)
