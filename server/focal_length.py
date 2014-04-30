@@ -1,7 +1,7 @@
 #!/usr/bin/python
 
 from __future__ import division
-from vpdetection import getOrthogonalVPs
+from vpdetection import getOrthogonalVPs, getManualOrthogonalVPs
 import numpy as np
 import cv2
 import sys
@@ -29,6 +29,30 @@ def compute_fov(w, h, f):
 # the 3 vanishing points.
 def compute_pp(imagePath):
     vps = getOrthogonalVPs(imagePath)
+
+    p0 = np.array(vps[0][0])
+    p1 = np.array(vps[1][0])
+    p2 = np.array(vps[2][0])
+
+    # vectors representing 3 sides of triangle
+    v0 = p2 - p1
+    v1 = p2 - p0
+    v2 = p1 - p0
+
+    # h0 is the other endpoint of the height from p0.
+    # (projection of v1 onto v2) * (unit vector of v1) + starting point of v1
+    mag_v0 = np.linalg.norm(v0)
+    h0 = (np.dot(v0, v2) / mag_v0) * (v0 / mag_v0) + p1
+    mag_v1 = np.linalg.norm(v1)
+    h1 = (np.dot(v1, v2) / mag_v1) * (v1 / mag_v1) + p0
+
+    o = compute_intersect(v0, h0, v1, h1)
+    print o
+    # cv2.circle(img, (int(o[0]), int(o[1])), 100, (255, 0, 0), -1)
+    return (v0, o, h0)
+
+def manual_compute_pp(imagePath):
+    vps = getManualOrthogonalVPs(imagePath)
 
     p0 = np.array(vps[0][0])
     p1 = np.array(vps[1][0])

@@ -266,7 +266,7 @@ def relativeEdge(edge, width, height):
     return Edge(e1, e2)
 
 
-def getManualOrthogonalVPs(imagePath):
+def getManualOrthogonalVPs(stringOfClusters):
     convert(imagePath, "temp.pgm")
     # runs LSD via command line
     inputfile = "temp.pgm"
@@ -292,10 +292,56 @@ def getManualOrthogonalVPs(imagePath):
 
     #print "starting clusters: %s" % len(edgeList)
     reducedClusters = reduceClusters(prefMatrix)
+    edgeClusters = reducedClusters[0]
+    sortedClusters = reversed(sorted(edgeClusters, key = len))
 
-    relativeClusters = [[relativeEdge(e, width, height) for e in cluster]
-                         for cluster in reducedClusters[0]]
+    #display each cluster
+    orthogonalClusters = []
+    targetColor = (0,0,255)
+    colors = [(255,0,0),
+              (0,255,0),
+              (0,0,255),
+              ]
 
+    for cluster in sortedClusters:
+        newimg = cv2.imread(imagePath, cv2.IMREAD_COLOR)
+        cv2.namedWindow('image')
+
+        #draw the lines in the target cluster
+        for edge in cluster:
+            cv2.line(newimg, edge.ep1, edge.ep2, targetColor, 10) # thickness 2
+
+        #draw the lines from clusters already selected
+        i = 0
+        for orthogonalCluster in orthogonalClusters:
+            for edge in orthogonalCluster:
+                cv2.line(newimg, edge.ep1, edge.ep2, colors[i], 5)
+            i += 1
+
+        height, width = newimg.shape[:2]
+        if (height > 720):
+            newimg = cv2.resize(newimg, (0,0), fx=720/height, fy=720/height)
+
+        cv2.imshow('image', newimg)
+
+        while(1):
+            keyPress = cv2.waitKey(0)
+            if keyPress == ord('y'):
+                orthogonalClusters.append(cluster)
+                cv2.destroyAllWindows()
+                break
+            elif keyPress == ord('n'):
+                cv2.destroyAllWindows()
+                break
+
+
+        #exit loop when 3 clusters chosen
+        if(len(orthogonalClusters) == 3):
+            break
+
+    vps = [(calculateVanishingPoint(cluster), cluster) for cluster in orthogonalClusters]
+
+    return (vps[0], vps[1], vps[2])
 
 if __name__ == "__main__":
     manualMode = False
@@ -309,6 +355,7 @@ if __name__ == "__main__":
         vps = getManualOrthogonalVPs(imagePath)
     else:
         vps = getOrthogonalVPs(imagePath)
+        print vps
 
     # display final image
     cv2.namedWindow('image')
