@@ -1,6 +1,7 @@
 import flask
 from flask import Flask
 from flask import request
+import math
 import cv2
 import urllib
 import focal_length
@@ -8,7 +9,9 @@ import radial_distortion
 
 
 app = Flask(__name__, static_url_path='')
-weights = [22302.0896768, -1.12908388976e-19, 1.13605974542]
+
+# stats for logit model
+coeffs = [550.0269, 3.4448, 0.0003, 2.8752]
 
 
 def calculate_distortion_score(image_url):
@@ -22,9 +25,16 @@ def calculate_distortion_score(image_url):
     h, w = img.shape[:2]
     FOV = float(focal_length.compute_fov(w, h, f))
 
-    dist_score = weights[0] * rad + weights[1] * f + weights[2] * FOV
+    # predictive model
+    b1 = math.exp(coeffs[0] * rad + coeffs[1] * FOV)
+    b2 = math.exp(coeffs[2] * rad + coeffs[3] * FOV)
 
-    return [rad, f, FOV, dist_score]
+    p1 = b1 / (1 + b1 + b2)
+    p2 = b2 / (1 + b1 + b2)
+
+    score = p1 * 5 + p2 * 10
+
+    return [rad, f, FOV, score]
 
 
 @app.route('/')
