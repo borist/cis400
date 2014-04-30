@@ -266,7 +266,7 @@ def relativeEdge(edge, width, height):
     return Edge(e1, e2)
 
 
-def getManualOrthogonalVPs(stringOfClusters):
+def getManualOrthogonalVPs(imagePath):
     convert(imagePath, "temp.pgm")
     # runs LSD via command line
     inputfile = "temp.pgm"
